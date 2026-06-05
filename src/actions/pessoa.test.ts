@@ -1,0 +1,171 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { createPessoa, getPessoas, updatePessoa, getPessoaById } from './pessoa'
+import { db } from '@/db'
+
+// Mock do Drizzle ORM
+vi.mock('@/db', () => ({
+  db: {
+    transaction: vi.fn(),
+    select: vi.fn(),
+    insert: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+  }
+}))
+
+// Mock do Supabase Auth Server Client
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: vi.fn().mockResolvedValue({
+    auth: {
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: { id: 'mock-user-uuid' } }
+      })
+    }
+  })
+}))
+
+describe('Pessoa Server Actions', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('deve criar uma pessoa com classificacoes e retornar o ID', async () => {
+    // Preparando o mock da transação
+    const mockTx = {
+      insert: vi.fn().mockReturnThis(),
+      values: vi.fn().mockResolvedValue([{ id: 'mock-uuid-123' }]) // Simula o retorno de db.insert(pessoa).values(...).returning()
+    }
+    
+    // O transaction executa o callback que passamos pra ele com o nosso tx mockado
+    vi.mocked(db.transaction).mockImplementation(async (callback) => {
+      // Como o callback da transação no actions.ts retorna o ID inserido, 
+      // precisamos simular a execução interna.
+      return 'mock-uuid-123' 
+    })
+
+    const payload = {
+      nomeCompleto: 'João da Silva',
+      cpf: '123.456.789-00',
+      classificacoes: ['aluno', 'responsavel'] as any
+    }
+
+    const result = await createPessoa(payload)
+
+    expect(result.success).toBe(true)
+    expect(result.id).toBe('mock-uuid-123')
+    expect(db.transaction).toHaveBeenCalledTimes(1)
+  })
+
+  it('deve lidar com erros ao criar pessoa', async () => {
+    vi.mocked(db.transaction).mockRejectedValue(new Error('Erro no BD'))
+
+    const result = await createPessoa({
+      nomeCompleto: 'Erro Teste',
+      classificacoes: []
+    })
+
+    expect(result.success).toBe(false)
+    expect(result.error).toBe('Erro no BD')
+  })
+
+  // getPessoas e updatePessoa testes...
+  it('deve formatar paginação e metadados ao buscar pessoas', async () => {
+    // Mock simplificado do select encadeado do Drizzle
+    const mockSelect = {
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      orderBy: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      offset: vi.fn().mockResolvedValue([{ id: '1', nomeCompleto: 'Maria' }])
+    }
+    
+    // O primeiro select é os dados, o segundo é o count
+    vi.mocked(db.select)
+      .mockReturnValueOnce(mockSelect as any) // para baseQuery
+      .mockReturnValueOnce({
+        from: vi.fn().mockResolvedValue([{ value: 1 }]) // para countQuery
+      } as any)
+
+    const result = await getPessoas({ page: 2, limit: 10 })
+
+    expect(result.success).toBe(true)
+    if (result.success && 'metadata' in result && result.metadata) {
+      expect(result.metadata.total).toBe(1)
+      expect(result.metadata.page).toBe(2)
+      expect(result.metadata.limit).toBe(10)
+      expect(result.metadata.totalPages).toBe(1)
+      expect(mockSelect.offset).toHaveBeenCalledWith(10) // (2-1)*10 = 10
+    }
+  })
+
+  it('deve criar uma pessoa com dados complementares de Aluno', async () => {
+    vi.mocked(db.transaction).mockImplementation(async (callback) => {
+      return 'mock-uuid-aluno'
+    })
+
+    const payload = {
+      nomeCompleto: 'Aluno de Teste',
+      classificacoes: ['aluno'] as any,
+      dadosAluno: {
+        numeroMatricula: 'MAT-2026',
+        ra: 'RA999',
+        codigoBarras: '12345',
+        loginPortal: 'alunoteste',
+        senhaPortalHash: 'hash-password',
+        cartaoCatraca: 'catraca-123',
+        permitirBiblioteca: true
+      }
+    }
+
+    const result = await createPessoa(payload)
+
+    expect(result.success).toBe(true)
+    expect(result.id).toBe('mock-uuid-aluno')
+  })
+
+  it('deve criar uma pessoa com dados complementares de Funcionário', async () => {
+    vi.mocked(db.transaction).mockImplementation(async (callback) => {
+      return 'mock-uuid-func'
+    })
+
+    const payload = {
+      nomeCompleto: 'Funcionário de Teste',
+      classificacoes: ['funcionario'] as any,
+      dadosFuncionario: {
+        cargo: 'Professor',
+        departamento: 'Pedagógico',
+        salario: 450000,
+        cargaHoraria: 40,
+        registroProfissional: 'MEC-123'
+      }
+    }
+
+    const result = await createPessoa(payload)
+
+    expect(result.success).toBe(true)
+    expect(result.id).toBe('mock-uuid-func')
+  })
+
+  it('deve buscar uma pessoa por ID com todos os detalhes incluindo dados complementares via getPessoaById', async () => {
+    const mockPessoaCompleta = {
+      id: 'mock-uuid-123',
+      nomeCompleto: 'João Aluno',
+      classificacoes: ['aluno'],
+      endereco: { id: 'end-1', logradouro: 'Rua Principal' },
+      contatos: [{ id: 'cont-1', valor: '99999-9999' }],
+      anexos: [],
+      dadosAluno: { id: 'aluno-1', numeroMatricula: '2026-001', ra: 'RA123' },
+      dadosFuncionario: null,
+      habilitacoes: []
+    }
+
+    vi.mocked(db.transaction).mockImplementation(async (callback) => {
+      return mockPessoaCompleta
+    })
+
+    const result = await getPessoaById('mock-uuid-123')
+
+    expect(result.success).toBe(true)
+    expect(result.data).toEqual(mockPessoaCompleta)
+  })
+})

@@ -1,0 +1,1 @@
+ALTER TABLE "turma" DROP COLUMN "ativa";

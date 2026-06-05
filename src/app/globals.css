@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  
+  /* CSM Brand Colors */
+  --color-csm-red: #da291c;
+  --color-csm-yellow: #ffc90e;
+  --color-csm-green: #00a651;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0b0f19;
+    --foreground: #f8fafc;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  transition-property: color, background-color;
+  transition-duration: 200ms;
+}
+
+@layer base {
+  input, select, textarea {
+    @apply text-gray-900 placeholder:text-gray-400 dark:text-slate-100 dark:placeholder:text-slate-500;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  /* Centralized Dark Mode Contrast Correction */
+  input, select, textarea {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+  }
+  input::placeholder, textarea::placeholder {
+    color: #64748b !important;
+  }
+  option {
+    background-color: #1e293b !important;
+    color: #f8fafc !important;
+  }
+  
+  .bg-white {
+    background-color: #0f172a !important; /* dark:bg-slate-900 */
+  }
+  .bg-gray-50, .bg-gray-50\/50, .bg-gray-50\/20 {
+    background-color: #0b0f19 !important; /* dark:bg-slate-950 */
+  }
+  .bg-gray-100 {
+    background-color: #1e293b !important; /* dark:bg-slate-800 */
+  }
+  .bg-blue-50 {
+    background-color: rgba(30, 41, 59, 0.5) !important;
+  }
+  .bg-green-50 {
+    background-color: rgba(6, 78, 59, 0.4) !important;
+  }
+  .bg-red-50 {
+    background-color: rgba(127, 29, 29, 0.4) !important;
+  }
+  .bg-purple-50 {
+    background-color: rgba(88, 28, 135, 0.4) !important;
+  }
+  .bg-orange-50 {
+    background-color: rgba(124, 45, 18, 0.4) !important;
+  }
+  
+  .border-gray-100, .border-gray-150, .border-gray-200, .border-gray-250, .border-gray-300 {
+    border-color: #1e293b !important; /* dark:border-slate-800 */
+  }
+  .divide-gray-100, .divide-gray-200 {
+    border-color: #1e293b !important;
+  }
+
+  .text-gray-950, .text-gray-900, .text-gray-800, .text-gray-700, .text-gray-600 {
+    color: #f1f5f9 !important; /* text-slate-100 */
+  }
+  .text-gray-500, .text-gray-400 {
+    color: #94a3b8 !important; /* text-slate-400 */
+  }
+  
+  .text-blue-800 {
+    color: #93c5fd !important;
+  }
+  .text-green-800 {
+    color: #86efac !important;
+  }
+  .text-red-800 {
+    color: #fca5a5 !important;
+  }
+  .text-purple-800 {
+    color: #d8b4fe !important;
+  }
+  .text-orange-800 {
+    color: #fdba74 !important;
+  }
+}
