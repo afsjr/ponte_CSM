@@ -29,7 +29,9 @@ import {
   getAtendimentosAluno,
   saveAtendimento,
   getDocumentosAluno,
-  saveDocumento
+  saveDocumento,
+  getAeeEvolucoes,
+  addAeeEvolucao
 } from '@/actions/aee';
 
 interface AeeFormModalProps {
@@ -37,7 +39,7 @@ interface AeeFormModalProps {
   onClose: () => void;
 }
 
-type TabType = 'ficha' | 'pei' | 'atendimentos' | 'documentos';
+type TabType = 'ficha' | 'pei' | 'atendimentos' | 'documentos' | 'evolucao';
 
 export default function AeeFormModal({ alunoId, onClose }: AeeFormModalProps) {
   // Configurações e estados gerais
@@ -102,6 +104,16 @@ export default function AeeFormModal({ alunoId, onClose }: AeeFormModalProps) {
   });
   const [savingDocumento, setSavingDocumento] = useState(false);
 
+  // 5. Histórico Evolutivo
+  const [prontuarioId, setProntuarioId] = useState<string | null>(null);
+  const [evolucoes, setEvolucoes] = useState<any[]>([]);
+  const [loadingEvolucoes, setLoadingEvolucoes] = useState(false);
+  const [evolucaoFormData, setEvolucaoFormData] = useState({
+    papel: 'Professor' as 'Professor' | 'Equipe AEE' | 'Família' | 'Profissional de Saúde' | 'Coordenação' | 'Outros',
+    descricao: ''
+  });
+  const [savingEvolucao, setSavingEvolucao] = useState(false);
+
   // Carregamento Inicial
   useEffect(() => {
     async function loadData() {
@@ -109,6 +121,7 @@ export default function AeeFormModal({ alunoId, onClose }: AeeFormModalProps) {
       // Carrega prontuário geral
       const prontRes = await getProntuarioAee(alunoId);
       if (prontRes) {
+        setProntuarioId(prontRes.id);
         setFormData({
           diagnostico: prontRes.diagnostico || '',
           medicacoesEmUso: prontRes.medicacoesEmUso || '',
@@ -201,6 +214,21 @@ export default function AeeFormModal({ alunoId, onClose }: AeeFormModalProps) {
     }
   }
 
+  async function loadEvolucoes() {
+    if (!prontuarioId) return;
+    setLoadingEvolucoes(true);
+    try {
+      const res = await getAeeEvolucoes(prontuarioId);
+      if (res.success && res.data) {
+        setEvolucoes(res.data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingEvolucoes(false);
+    }
+  }
+
   // Monitora a troca de abas para carregar dados sob demanda
   useEffect(() => {
     if (activeTab === 'atendimentos') {
@@ -209,8 +237,10 @@ export default function AeeFormModal({ alunoId, onClose }: AeeFormModalProps) {
       loadDocumentos();
     } else if (activeTab === 'pei') {
       loadPei();
+    } else if (activeTab === 'evolucao') {
+      loadEvolucoes();
     }
-  }, [activeTab]);
+  }, [activeTab, prontuarioId]);
 
   // Manipuladores de Input
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
@@ -404,6 +434,38 @@ export default function AeeFormModal({ alunoId, onClose }: AeeFormModalProps) {
     }
   };
 
+  // Salvar Evolução (Aba 5)
+  const handleSaveEvolucao = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!prontuarioId) {
+      alert('Salve o prontuário geral primeiro!');
+      return;
+    }
+    if (!evolucaoFormData.descricao.trim()) {
+      alert('Preencha a descrição da evolução!');
+      return;
+    }
+    setSavingEvolucao(true);
+    try {
+      const res = await addAeeEvolucao({
+        prontuarioId,
+        papel: evolucaoFormData.papel,
+        descricao: evolucaoFormData.descricao
+      });
+
+      if (res.success && res.data) {
+        setEvolucaoFormData(prev => ({ ...prev, descricao: '' }));
+        loadEvolucoes();
+      } else {
+        alert(res.error || 'Erro ao salvar evolução');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSavingEvolucao(false);
+    }
+  };
+
   const handleRemoverDoAee = async () => {
     if (confirm("Tem certeza que deseja desvincular este aluno do AEE? O histórico não será apagado, mas ele deixará de aparecer na lista principal.")) {
       setSaving(true);
@@ -477,6 +539,9 @@ export default function AeeFormModal({ alunoId, onClose }: AeeFormModalProps) {
           </button>
           <button type="button" onClick={() => setActiveTab('documentos')} className={tabClass('documentos')}>
             <LucideFile size={16} /> Laudos & Anexos
+          </button>
+          <button type="button" onClick={() => setActiveTab('evolucao')} className={tabClass('evolucao')}>
+            <LucideFileText size={16} /> Evolução
           </button>
         </div>
 
@@ -1079,6 +1144,90 @@ export default function AeeFormModal({ alunoId, onClose }: AeeFormModalProps) {
                     ) : (
                       <div className="bg-gray-50 rounded-xl border border-dashed border-gray-300 py-12 text-center text-gray-500 text-xs font-semibold">
                         Nenhum laudo clínico ou documento anexado para este prontuário.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 5: HISTÓRICO EVOLUTIVO */}
+              {activeTab === 'evolucao' && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in-50 duration-150">
+                  {/* Formulário Nova Evolução */}
+                  <form onSubmit={handleSaveEvolucao} className="bg-white border border-gray-250 p-4 rounded-xl space-y-4 h-fit">
+                    <h4 className="text-sm font-bold text-gray-800 border-b pb-2 mb-3">Registrar Evolução</h4>
+                    
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Qual é o seu papel?</label>
+                      <select
+                        value={evolucaoFormData.papel}
+                        onChange={(e: any) => setEvolucaoFormData({ ...evolucaoFormData, papel: e.target.value })}
+                        className="w-full border border-gray-300 rounded-md p-2 text-xs bg-white"
+                      >
+                        <option value="Professor">Professor(a) Comum</option>
+                        <option value="Equipe AEE">Equipe AEE</option>
+                        <option value="Coordenação">Coordenação Pedagógica</option>
+                        <option value="Família">Responsável / Família</option>
+                        <option value="Profissional de Saúde">Profissional de Saúde Externo</option>
+                        <option value="Outros">Outros</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Nota Evolutiva / Observação</label>
+                      <textarea
+                        required
+                        value={evolucaoFormData.descricao}
+                        onChange={(e) => setEvolucaoFormData({ ...evolucaoFormData, descricao: e.target.value })}
+                        rows={4}
+                        className="w-full p-2 border border-gray-350 rounded-lg text-xs outline-none focus:ring-1 focus:ring-[var(--color-csm-green)]"
+                        placeholder="Descreva o avanço, dificuldade ou feedback presenciado..."
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={savingEvolucao}
+                      className="w-full py-2 bg-[var(--color-csm-green)] hover:opacity-90 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-opacity"
+                    >
+                      {savingEvolucao ? <LucideLoader2 className="animate-spin" size={14} /> : <LucidePlusCircle size={14} />}
+                      Salvar Evolução
+                    </button>
+                  </form>
+
+                  {/* Listagem de Evoluções */}
+                  <div className="lg:col-span-2 space-y-4">
+                    <h4 className="text-sm font-bold text-gray-800">Timeline de Evolução do Prontuário</h4>
+
+                    {loadingEvolucoes ? (
+                      <div className="flex justify-center py-12">
+                        <LucideLoader2 className="animate-spin text-[var(--color-csm-green)]" size={24} />
+                      </div>
+                    ) : evolucoes.length > 0 ? (
+                      <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-300 before:to-transparent">
+                        {evolucoes.map((evo) => (
+                          <div key={evo.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                            <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-[var(--color-csm-green)] text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
+                              <LucideFileText size={16} />
+                            </div>
+                            <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                              <div className="flex items-center justify-between space-x-2 mb-1">
+                                <div className="font-bold text-gray-900 text-sm">{evo.papel}</div>
+                                <time className="font-semibold text-gray-500 text-[10px]">{new Date(evo.createdAt).toLocaleString('pt-BR')}</time>
+                              </div>
+                              <div className="text-gray-600 text-xs mb-2">
+                                Por: <span className="font-semibold">{evo.autorNome || 'Usuário Sistema'}</span>
+                              </div>
+                              <div className="text-gray-700 text-sm bg-gray-50 p-3 rounded-lg border border-gray-100 whitespace-pre-line">
+                                {evo.descricao}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="bg-gray-50 rounded-xl border border-dashed border-gray-300 py-12 text-center text-gray-500 text-xs font-semibold">
+                        Nenhuma nota evolutiva registrada.
                       </div>
                     )}
                   </div>

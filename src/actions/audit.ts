@@ -12,6 +12,13 @@ export type LogAuditParams = {
   motivo?: string;
 };
 
+export function getAuditUserId(id: string | null | undefined): string | null {
+  if (!id || id === '00000000-0000-0000-0000-000000000000') {
+    return null;
+  }
+  return id;
+}
+
 /**
  * Registra uma entrada na tabela de log de auditoria.
  * Projetado para ser imutável (sem exclusão ou modificação dos registros de log).
@@ -19,7 +26,7 @@ export type LogAuditParams = {
 export async function logAudit(params: LogAuditParams) {
   try {
     await db.insert(auditLog).values({
-      usuarioId: params.usuarioId || null,
+      usuarioId: getAuditUserId(params.usuarioId),
       acao: params.acao,
       tabela: params.tabela,
       registroId: params.registroId,

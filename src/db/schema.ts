@@ -23,6 +23,7 @@ export const situacaoTurmaEnum = pgEnum('situacao_turma', ['aberta', 'em_andamen
 export const tipoBaseEnum = pgEnum('tipo_base', ['basica', 'complementar', 'tecnica', 'livre']);
 export const formaAvaliacaoEnum = pgEnum('forma_avaliacao', ['numerica', 'conceitual', 'mista', 'sem_avaliacao']);
 export const diaSemanaEnum = pgEnum('dia_semana', ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo']);
+export const tipoEventoCalendarioEnum = pgEnum('tipo_evento_calendario', ['feriado', 'reuniao_pais', 'conselho_classe', 'prova', 'evento_escolar', 'outro']);
 
 // --- CORE TABLES ---
 export const pessoa = pgTable('pessoa', {
@@ -419,8 +420,18 @@ export const aeeProntuario = pgTable('aee_prontuario', {
 });
 
 // Enums para AEE
+export const papelEvolucaoAeeEnum = pgEnum('papel_evolucao_aee', ['Professor', 'Equipe AEE', 'Família', 'Profissional de Saúde', 'Coordenação', 'Outros']);
 export const statusMetaPeiEnum = pgEnum('status_meta_pei', ['nao_iniciado', 'em_progresso', 'alcancada', 'nao_alcancada']);
 export const areaMetaPeiEnum = pgEnum('area_meta_pei', ['pedagogica', 'social', 'motora', 'tecnica', 'autonomia']);
+
+export const aeeProntuarioEvolucao = pgTable('aee_prontuario_evolucao', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  prontuarioId: uuid('prontuario_id').references(() => aeeProntuario.id, { onDelete: 'cascade' }).notNull(),
+  autorId: uuid('autor_id').references(() => pessoa.id, { onDelete: 'set null' }), // set null pq a conta pode ser deletada, mas o prontuario não perde histórico
+  papel: papelEvolucaoAeeEnum('papel').notNull(),
+  descricao: text('descricao').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
 
 export const aeePei = pgTable('aee_pei', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -473,6 +484,7 @@ export const vinculoResponsavelAluno = pgTable('vinculo_responsavel_aluno', {
   alunoId: uuid('aluno_id').references(() => pessoa.id, { onDelete: 'cascade' }).notNull(),
   grauParentesco: varchar('grau_parentesco', { length: 50 }).notNull(),
   responsavelFinanceiro: boolean('responsavel_financeiro').default(false).notNull(),
+  responsavelPedagogico: boolean('responsavel_pedagogico').default(false).notNull(),
   autorizadoRetirada: boolean('autorizado_retirada').default(false).notNull(),
   
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -502,3 +514,30 @@ export const avisoCiente = pgTable('aviso_ciente', {
   cienteEm: timestamp('ciente_em').defaultNow().notNull(),
 });
 
+export const notasBoletim = pgTable('notas_boletim', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  alunoId: uuid('aluno_id').references(() => pessoa.id, { onDelete: 'cascade' }).notNull(),
+  anoLetivoId: uuid('ano_letivo_id').references(() => anoLetivo.id, { onDelete: 'cascade' }).notNull(),
+  disciplinaId: uuid('disciplina_id').references(() => disciplina.id, { onDelete: 'cascade' }).notNull(),
+  trimestre1: integer('trimestre1'), // nota * 100 (ex: 850 para 8.5)
+  trimestre2: integer('trimestre2'),
+  trimestre3: integer('trimestre3'),
+  mediaFinal: integer('media_final'),
+  
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const calendarioPedagogico = pgTable('calendario_pedagogico', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  anoLetivoId: uuid('ano_letivo_id').references(() => anoLetivo.id, { onDelete: 'cascade' }).notNull(),
+  titulo: text('titulo').notNull(),
+  descricao: text('descricao'),
+  dataInicio: timestamp('data_inicio').notNull(),
+  dataFim: timestamp('data_fim').notNull(),
+  tipoEvento: tipoEventoCalendarioEnum('tipo_evento').default('feriado').notNull(),
+  corHex: varchar('cor_hex', { length: 7 }).default('#4A90E2'),
+  
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});

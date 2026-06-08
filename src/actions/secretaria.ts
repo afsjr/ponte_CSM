@@ -131,6 +131,28 @@ export async function updateMatricula(id: string, data: {
 
 // --- UTILS PARA SELECTS ---
 
+export async function getAlunosDaTurma(turmaId: string) {
+  try {
+    const alunos = await db
+      .select({
+        id: pessoa.id,
+        nomeCompleto: pessoa.nomeCompleto,
+        cpf: pessoa.cpf,
+        numeroMatricula: matricula.numeroMatricula,
+        status: matricula.status,
+      })
+      .from(matricula)
+      .innerJoin(pessoa, eq(matricula.alunoId, pessoa.id))
+      .where(eq(matricula.turmaId, turmaId))
+      .orderBy(pessoa.nomeCompleto);
+
+    return { success: true, data: alunos };
+  } catch (error: any) {
+    console.error('Erro ao buscar alunos da turma:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 export async function getAlunosList() {
   try {
     const alunos = await db
@@ -279,7 +301,7 @@ export async function deleteContrato(id: string, motivo: string) {
     await db.transaction(async (tx) => {
       await tx.delete(contratoEscolar).where(eq(contratoEscolar.id, id));
       await tx.insert(auditLog).values({
-        usuarioId: user.id,
+        usuarioId: user.id === '00000000-0000-0000-0000-000000000000' ? null : user.id,
         acao: 'delete',
         tabela: 'contrato_escolar',
         registroId: id,
@@ -395,7 +417,7 @@ export async function deleteDocumentoGerado(id: string, motivo: string) {
     await db.transaction(async (tx) => {
       await tx.delete(documentoGerado).where(eq(documentoGerado.id, id));
       await tx.insert(auditLog).values({
-        usuarioId: user.id,
+        usuarioId: user.id === '00000000-0000-0000-0000-000000000000' ? null : user.id,
         acao: 'delete',
         tabela: 'documento_gerado',
         registroId: id,
@@ -424,7 +446,7 @@ export async function deleteMatricula(id: string, motivo: string) {
     await db.transaction(async (tx) => {
       await tx.delete(matricula).where(eq(matricula.id, id));
       await tx.insert(auditLog).values({
-        usuarioId: user.id,
+        usuarioId: user.id === '00000000-0000-0000-0000-000000000000' ? null : user.id,
         acao: 'delete',
         tabela: 'matricula',
         registroId: id,
@@ -452,7 +474,7 @@ export async function deleteAnoLetivo(id: string, motivo: string) {
     await db.transaction(async (tx) => {
       await tx.delete(anoLetivo).where(eq(anoLetivo.id, id));
       await tx.insert(auditLog).values({
-        usuarioId: user.id,
+        usuarioId: user.id === '00000000-0000-0000-0000-000000000000' ? null : user.id,
         acao: 'delete',
         tabela: 'ano_letivo',
         registroId: id,
@@ -561,7 +583,7 @@ export async function deleteOcorrencia(id: string, motivo: string) {
     await db.transaction(async (tx) => {
       await tx.delete(ocorrenciaAluno).where(eq(ocorrenciaAluno.id, id));
       await tx.insert(auditLog).values({
-        usuarioId: user.id,
+        usuarioId: user.id === '00000000-0000-0000-0000-000000000000' ? null : user.id,
         acao: 'delete',
         tabela: 'ocorrencia_aluno',
         registroId: id,
@@ -664,7 +686,7 @@ export async function deleteHistorico(id: string, motivo: string) {
     await db.transaction(async (tx) => {
       await tx.delete(historicoEscolar).where(eq(historicoEscolar.id, id));
       await tx.insert(auditLog).values({
-        usuarioId: user.id,
+        usuarioId: user.id === '00000000-0000-0000-0000-000000000000' ? null : user.id,
         acao: 'delete',
         tabela: 'historico_escolar',
         registroId: id,

@@ -1,8 +1,8 @@
 'use server'
 
 import { db } from '@/db'
-import { nivelEnsino, serie, turma, disciplina, turmaDocente, pessoa, pessoaClassificacao, auditLog, sala, gradeCurricular } from '@/db/schema'
-import { eq, desc, asc } from 'drizzle-orm'
+import { nivelEnsino, serie, turma, disciplina, turmaDocente, pessoa, pessoaClassificacao, auditLog, sala, gradeCurricular, matricula } from '@/db/schema'
+import { eq, desc, asc, count, and } from 'drizzle-orm'
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
@@ -233,7 +233,28 @@ export async function createTurma(data: {
 
 export async function getTurmas() {
   try {
-    const data = await db.select().from(turma).orderBy(asc(turma.nome));
+    const data = await db
+      .select({
+        id: turma.id,
+        nome: turma.nome,
+        anoLetivoId: turma.anoLetivoId,
+        serieId: turma.serieId,
+        turno: turma.turno,
+        capacidadeMaxima: turma.capacidadeMaxima,
+        situacao: turma.situacao,
+        salaId: turma.salaId,
+        createdAt: turma.createdAt,
+        updatedAt: turma.updatedAt,
+        qtdAlunos: count(matricula.id)
+      })
+      .from(turma)
+      .leftJoin(matricula, and(
+        eq(turma.id, matricula.turmaId),
+        eq(matricula.status, 'ativo')
+      ))
+      .groupBy(turma.id)
+      .orderBy(asc(turma.nome));
+      
     return { success: true, data };
   } catch (error: any) {
     console.error('Erro ao buscar Turmas:', error);
@@ -342,7 +363,7 @@ export async function deleteTurma(id: string, motivo: string) {
     await db.transaction(async (tx) => {
       await tx.delete(turma).where(eq(turma.id, id));
       await tx.insert(auditLog).values({
-        usuarioId: user.id,
+        usuarioId: user.id === '00000000-0000-0000-0000-000000000000' ? null : user.id,
         acao: 'delete',
         tabela: 'turma',
         registroId: id,
@@ -369,7 +390,7 @@ export async function deleteDisciplina(id: string, motivo: string) {
     await db.transaction(async (tx) => {
       await tx.delete(disciplina).where(eq(disciplina.id, id));
       await tx.insert(auditLog).values({
-        usuarioId: user.id,
+        usuarioId: user.id === '00000000-0000-0000-0000-000000000000' ? null : user.id,
         acao: 'delete',
         tabela: 'disciplina',
         registroId: id,
@@ -431,7 +452,7 @@ export async function deleteSala(id: string, motivo: string) {
     await db.transaction(async (tx) => {
       await tx.delete(sala).where(eq(sala.id, id));
       await tx.insert(auditLog).values({
-        usuarioId: user.id,
+        usuarioId: user.id === '00000000-0000-0000-0000-000000000000' ? null : user.id,
         acao: 'delete',
         tabela: 'sala',
         registroId: id,
@@ -513,7 +534,7 @@ export async function deleteGradeCurricular(id: string, motivo: string) {
     await db.transaction(async (tx) => {
       await tx.delete(gradeCurricular).where(eq(gradeCurricular.id, id));
       await tx.insert(auditLog).values({
-        usuarioId: user.id,
+        usuarioId: user.id === '00000000-0000-0000-0000-000000000000' ? null : user.id,
         acao: 'delete',
         tabela: 'grade_curricular',
         registroId: id,
@@ -526,6 +547,29 @@ export async function deleteGradeCurricular(id: string, motivo: string) {
     return { success: true };
   } catch (error: any) {
     console.error('Erro ao excluir item de grade curricular:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getAlunosMatriculadosTurma(turmaId: string) {
+  try {
+    const alunos = await db
+      .select({
+        alunoId: pessoa.id,
+        nomeCompleto: pessoa.nomeCompleto,
+        cpf: pessoa.cpf,
+        matriculaId: matricula.id,
+        numeroMatricula: matricula.numeroMatricula,
+        status: matricula.status,
+      })
+      .from(matricula)
+      .innerJoin(pessoa, eq(matricula.alunoId, pessoa.id))
+      .where(and(eq(matricula.turmaId, turmaId), eq(matricula.status, 'ativo')))
+      .orderBy(pessoa.nomeCompleto);
+
+    return { success: true, data: alunos };
+  } catch (error: any) {
+    console.error('Erro ao buscar alunos da turma:', error);
     return { success: false, error: error.message };
   }
 }

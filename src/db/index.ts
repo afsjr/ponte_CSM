@@ -13,10 +13,10 @@ declare global {
 let client: postgres.Sql;
 
 if (process.env.NODE_ENV === "production") {
-  client = postgres(connectionString, { prepare: false });
+  client = postgres(connectionString, { prepare: false, ssl: "require" });
 } else {
   if (!global.postgresClient) {
-    global.postgresClient = postgres(connectionString, { prepare: false });
+    global.postgresClient = postgres(connectionString, { prepare: false, ssl: "require" });
   }
   client = global.postgresClient;
 }

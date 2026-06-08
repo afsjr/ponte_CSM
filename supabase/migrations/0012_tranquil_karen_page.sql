@@ -1,0 +1,1 @@
+ALTER TABLE "vinculo_responsavel_aluno" ADD COLUMN "responsavel_pedagogico" boolean DEFAULT false NOT NULL;

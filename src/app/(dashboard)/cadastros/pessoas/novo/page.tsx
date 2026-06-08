@@ -1,7 +1,14 @@
 import { PessoaForm } from './PessoaForm'
 import { getDisciplinas, getTurmas } from '@/actions/pedagogico'
 
-export default async function NovaPessoaPage() {
+export default async function NovaPessoaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+  const params = await searchParams
+  const tipo = typeof params.tipo === 'string' ? params.tipo : 'interessado'
+
   const disciplinasRes = await getDisciplinas()
   const disciplinas = disciplinasRes.success && disciplinasRes.data ? disciplinasRes.data : []
 
@@ -18,7 +25,7 @@ export default async function NovaPessoaPage() {
       </div>
 
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
-        <PessoaForm disciplinas={disciplinas as any} turmas={turmas as any} />
+        <PessoaForm disciplinas={disciplinas as any} turmas={turmas as any} defaultTipo={tipo} />
       </div>
     </div>
   )

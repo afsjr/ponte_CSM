@@ -153,7 +153,7 @@ export async function removerVinculo(vinculoId: string, justificativa: string) {
 
       // Salva no log de auditoria
       await tx.insert(auditLog).values({
-        usuarioId: user.id,
+        usuarioId: user.id === '00000000-0000-0000-0000-000000000000' ? null : user.id,
         acao: 'delete',
         tabela: 'vinculo_responsavel_aluno',
         registroId: vinculoId,
@@ -270,7 +270,7 @@ export async function deleteAviso(avisoId: string, justificativa: string) {
 
       // Salva no log de auditoria
       await tx.insert(auditLog).values({
-        usuarioId: user.id,
+        usuarioId: user.id === '00000000-0000-0000-0000-000000000000' ? null : user.id,
         acao: 'delete',
         tabela: 'mural_aviso',
         registroId: avisoId,

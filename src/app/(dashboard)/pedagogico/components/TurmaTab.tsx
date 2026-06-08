@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { getTurmas, createTurma, updateTurma, getSeries, getSalas } from '@/actions/pedagogico'
 import { getAnosLetivos } from '@/actions/secretaria'
-import { LucidePlus, LucideEdit, LucideSave, LucideX, LucideLoader2, LucideUsers, LucideCalendar } from 'lucide-react'
+import { LucidePlus, LucideEdit, LucideSave, LucideX, LucideLoader2, LucideUsers, LucideCalendar, LucideGraduationCap } from 'lucide-react'
 import { TurmaProfessoresModal } from './TurmaProfessoresModal'
+import { TurmaAlunosModal } from './TurmaAlunosModal'
 import { QuadroHorarioModal } from './QuadroHorarioModal'
 
 type Turma = {
@@ -16,6 +17,7 @@ type Turma = {
   capacidadeMaxima: number | null;
   situacao: 'aberta' | 'em_andamento' | 'encerrada' | 'cancelada';
   salaId: string | null;
+  qtdAlunos?: number;
 }
 
 type Serie = {
@@ -67,6 +69,7 @@ export function TurmaTab() {
   const [isEditing, setIsEditing] = useState(false)
   const [selectedTurmaForModal, setSelectedTurmaForModal] = useState<Turma | null>(null)
   const [selectedTurmaForHorario, setSelectedTurmaForHorario] = useState<Turma | null>(null)
+  const [selectedTurmaForAlunos, setSelectedTurmaForAlunos] = useState<Turma | null>(null)
 
   const loadData = async () => {
     setLoading(true)
@@ -323,7 +326,7 @@ export function TurmaTab() {
                 <th className="px-6 py-3 font-semibold">Ano Letivo</th>
                 <th className="px-6 py-3 font-semibold">Sala</th>
                 <th className="px-6 py-3 font-semibold">Turno</th>
-                <th className="px-6 py-3 font-semibold">Capacidade</th>
+                <th className="px-6 py-3 font-semibold">Qtd. Alunos</th>
                 <th className="px-6 py-3 font-semibold">Status</th>
                 <th className="px-6 py-3 font-semibold text-right">Ações</th>
               </tr>
@@ -345,7 +348,12 @@ export function TurmaTab() {
                     </td>
                     <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{getSalaNome(item.salaId)}</td>
                     <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{getTurnoLabel(item.turno)}</td>
-                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{item.capacidadeMaxima} vagas</td>
+                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400">
+                      <div className="flex items-center gap-1">
+                        <span>{item.qtdAlunos || 0}</span>
+                        {item.capacidadeMaxima && <span className="text-xs text-gray-400">/ {item.capacidadeMaxima}</span>}
+                      </div>
+                    </td>
                     <td className="px-6 py-4">
                       {item.situacao === 'aberta' && (
                         <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">Aberta</span>
@@ -367,6 +375,13 @@ export function TurmaTab() {
                         title="Quadro de Horário"
                       >
                         <LucideCalendar size={18} />
+                      </button>
+                      <button
+                        onClick={() => setSelectedTurmaForAlunos(item)}
+                        className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 transition-colors"
+                        title="Alunos"
+                      >
+                        <LucideGraduationCap size={18} />
                       </button>
                       <button
                         onClick={() => setSelectedTurmaForModal(item)}
@@ -402,6 +417,13 @@ export function TurmaTab() {
         <QuadroHorarioModal
           turma={{ id: selectedTurmaForHorario.id, nome: selectedTurmaForHorario.nome }}
           onClose={() => setSelectedTurmaForHorario(null)}
+        />
+      )}
+
+      {selectedTurmaForAlunos && (
+        <TurmaAlunosModal
+          turma={{ id: selectedTurmaForAlunos.id, nome: selectedTurmaForAlunos.nome }}
+          onClose={() => setSelectedTurmaForAlunos(null)}
         />
       )}
     </div>

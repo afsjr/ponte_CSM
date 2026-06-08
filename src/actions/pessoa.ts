@@ -1,8 +1,8 @@
 'use server'
 
 import { db } from '@/db'
-import { pessoa, pessoaClassificacao, endereco, contato, anexo, funcionarioHabilitacao, auditLog, dadosAluno, dadosFuncionario } from '@/db/schema'
-import { eq, like, or, ilike, desc, count } from 'drizzle-orm'
+import { pessoa, pessoaClassificacao, endereco, contato, anexo, funcionarioHabilitacao, auditLog, dadosAluno, dadosFuncionario, vinculoResponsavelAluno } from '@/db/schema'
+import { eq, like, or, ilike, desc, count, and } from 'drizzle-orm'
 import { createClient } from '@/lib/supabase/server'
 
 async function checkAuth() {
@@ -56,6 +56,13 @@ export type CreatePessoaParams = {
     cartaoCatraca?: string;
     permitirBiblioteca?: boolean;
     turmaAtualId?: string;
+    vinculos?: {
+      responsavelId: string;
+      grauParentesco: string;
+      responsavelFinanceiro: boolean;
+      responsavelPedagogico: boolean;
+      autorizadoRetirada: boolean;
+    }[];
   };
   dadosFuncionario?: {
     cargo?: string;
@@ -136,6 +143,18 @@ export async function createPessoa(data: CreatePessoaParams) {
           permitirBiblioteca: alunoInputData.permitirBiblioteca ?? true,
           turmaAtualId: alunoInputData.turmaAtualId
         });
+
+        if (alunoInputData.vinculos && alunoInputData.vinculos.length > 0) {
+          const vinculosInsert = alunoInputData.vinculos.map(v => ({
+            alunoId: novaPessoa.id,
+            responsavelId: v.responsavelId,
+            grauParentesco: v.grauParentesco,
+            responsavelFinanceiro: v.responsavelFinanceiro,
+            responsavelPedagogico: v.responsavelPedagogico,
+            autorizadoRetirada: v.autorizadoRetirada
+          }));
+          await tx.insert(vinculoResponsavelAluno).values(vinculosInsert);
+        }
       }
 
       // 7. Criar Dados de Funcionário (se for funcionário)
@@ -162,31 +181,54 @@ export async function createPessoa(data: CreatePessoaParams) {
   }
 }
 
-export async function getPessoas(params: { page?: number; limit?: number; search?: string }) {
+export async function getPessoas(params: { page?: number; limit?: number; search?: string; tipo?: string }) {
   const page = params.page || 1;
-  const limit = params.limit || 10;
+  const limit = params.limit || 15;
   const offset = (page - 1) * limit;
 
   try {
-    let baseQuery = db.select().from(pessoa);
-    let countQuery = db.select({ value: count() }).from(pessoa);
+    let baseQuery = db
+      .select({
+        id: pessoa.id,
+        nomeCompleto: pessoa.nomeCompleto,
+        cpf: pessoa.cpf,
+        situacao: pessoa.situacao,
+        createdAt: pessoa.createdAt,
+        tipo: pessoaClassificacao.tipo,
+      })
+      .from(pessoa)
+      .leftJoin(pessoaClassificacao, eq(pessoaClassificacao.pessoaId, pessoa.id));
+
+    let countQuery = db
+      .select({ value: count() })
+      .from(pessoa)
+      .leftJoin(pessoaClassificacao, eq(pessoaClassificacao.pessoaId, pessoa.id));
+
+    const filters = [];
 
     if (params.search) {
       const searchTerm = `%${params.search}%`;
-      const searchFilter = or(
+      filters.push(or(
         ilike(pessoa.nomeCompleto, searchTerm),
         ilike(pessoa.cpf, searchTerm)
-      );
-      
-      baseQuery = baseQuery.where(searchFilter) as any;
-      countQuery = countQuery.where(searchFilter) as any;
+      ));
+    }
+
+    if (params.tipo && params.tipo !== 'todos') {
+      filters.push(eq(pessoaClassificacao.tipo, params.tipo as any));
+    }
+
+    if (filters.length > 0) {
+      const combined = and(...filters);
+      baseQuery = baseQuery.where(combined) as any;
+      countQuery = countQuery.where(combined) as any;
     }
 
     const [totalResult] = await countQuery;
     const total = totalResult.value;
 
     const data = await baseQuery
-      .orderBy(desc(pessoa.createdAt))
+      .orderBy(pessoa.nomeCompleto)
       .limit(limit)
       .offset(offset);
 
@@ -209,22 +251,28 @@ export async function getPessoas(params: { page?: number; limit?: number; search
 export async function updatePessoa(id: string, data: Partial<CreatePessoaParams>) {
   try {
     const user = await checkAuth()
-    const { classificacoes, habilitacoes, dadosAluno: alunoInputData, dadosFuncionario: funcionarioInputData, ...pessoaData } = data;
+    const { classificacoes, habilitacoes, dadosAluno: alunoInputData, dadosFuncionario: funcionarioInputData, contatos: contatosInput, endereco: enderecoInput, ...restData } = data;
+
+    // Extrair APENAS os campos válidos da tabela pessoa (evitar spreads que corrompem o UPDATE)
+    const pessoaFields: Record<string, any> = {}
+    const validPessoaKeys = ['nomeCompleto', 'cpf', 'rg', 'orgaoExpedidorRg', 'dataExpedicaoRg', 'dataNascimento', 'cidadeNatal', 'nacionalidade', 'estrangeiro', 'genero', 'estadoCivil', 'situacao', 'necessidadeEspecial']
+    for (const key of validPessoaKeys) {
+      if (key in restData) {
+        pessoaFields[key] = (restData as any)[key]
+      }
+    }
 
     await db.transaction(async (tx) => {
-      // Atualiza os dados principais
-      if (Object.keys(pessoaData).length > 0) {
+      // Atualiza os dados principais (somente colunas válidas)
+      if (Object.keys(pessoaFields).length > 0) {
         await tx.update(pessoa)
-          .set({ ...pessoaData, updatedAt: new Date() })
+          .set({ ...pessoaFields, updatedAt: new Date() })
           .where(eq(pessoa.id, id));
       }
 
       // Atualiza classificações se fornecidas
       if (classificacoes) {
-        // Remove as antigas
         await tx.delete(pessoaClassificacao).where(eq(pessoaClassificacao.pessoaId, id));
-        
-        // Insere as novas
         if (classificacoes.length > 0) {
           const classificacoesInsert = classificacoes.map((tipo) => ({
             pessoaId: id,
@@ -277,6 +325,22 @@ export async function updatePessoa(id: string, data: Partial<CreatePessoaParams>
           });
       }
 
+      // Atualiza Vínculos do Aluno se fornecido
+      if (alunoInputData && alunoInputData.vinculos !== undefined && (classificacoes?.includes('aluno') || data.classificacoes?.includes('aluno'))) {
+        await tx.delete(vinculoResponsavelAluno).where(eq(vinculoResponsavelAluno.alunoId, id));
+        if (alunoInputData.vinculos.length > 0) {
+          const vinculosInsert = alunoInputData.vinculos.map(v => ({
+            alunoId: id,
+            responsavelId: v.responsavelId,
+            grauParentesco: v.grauParentesco,
+            responsavelFinanceiro: v.responsavelFinanceiro,
+            responsavelPedagogico: v.responsavelPedagogico,
+            autorizadoRetirada: v.autorizadoRetirada
+          }));
+          await tx.insert(vinculoResponsavelAluno).values(vinculosInsert);
+        }
+      }
+
       // Atualiza Dados de Funcionário (Upsert)
       if (funcionarioInputData && (classificacoes?.includes('funcionario') || data.classificacoes?.includes('funcionario'))) {
         await tx.insert(dadosFuncionario)
@@ -326,7 +390,7 @@ export async function deletePessoa(id: string, motivo: string) {
     await db.transaction(async (tx) => {
       await tx.delete(pessoa).where(eq(pessoa.id, id));
       await tx.insert(auditLog).values({
-        usuarioId: user.id,
+        usuarioId: user.id === '00000000-0000-0000-0000-000000000000' ? null : user.id,
         acao: 'delete',
         tabela: 'pessoa',
         registroId: id,
@@ -358,6 +422,24 @@ export async function getPessoaById(id: string) {
       const [alunoData] = await tx.select().from(dadosAluno).where(eq(dadosAluno.pessoaId, id));
       const [funcionarioData] = await tx.select().from(dadosFuncionario).where(eq(dadosFuncionario.pessoaId, id));
       const habilitacoes = await tx.select().from(funcionarioHabilitacao).where(eq(funcionarioHabilitacao.funcionarioId, id));
+      
+      const vinculos = await tx.select({
+        id: vinculoResponsavelAluno.id,
+        responsavelId: vinculoResponsavelAluno.responsavelId,
+        grauParentesco: vinculoResponsavelAluno.grauParentesco,
+        responsavelFinanceiro: vinculoResponsavelAluno.responsavelFinanceiro,
+        responsavelPedagogico: vinculoResponsavelAluno.responsavelPedagogico,
+        autorizadoRetirada: vinculoResponsavelAluno.autorizadoRetirada,
+        responsavelNome: pessoa.nomeCompleto,
+        responsavelCpf: pessoa.cpf,
+      })
+      .from(vinculoResponsavelAluno)
+      .innerJoin(pessoa, eq(pessoa.id, vinculoResponsavelAluno.responsavelId))
+      .where(eq(vinculoResponsavelAluno.alunoId, id));
+
+      if (alunoData) {
+        (alunoData as any).vinculos = vinculos;
+      }
 
       return {
         ...p,
@@ -374,6 +456,36 @@ export async function getPessoaById(id: string) {
     return { success: true, data: result };
   } catch (error: any) {
     console.error('Erro ao buscar pessoa por ID:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function searchResponsaveis(query: string) {
+  try {
+    const searchTerm = `%${query}%`;
+    const data = await db
+      .select({
+        id: pessoa.id,
+        nomeCompleto: pessoa.nomeCompleto,
+        cpf: pessoa.cpf,
+      })
+      .from(pessoa)
+      .innerJoin(pessoaClassificacao, eq(pessoa.id, pessoaClassificacao.pessoaId))
+      .where(
+        and(
+          eq(pessoaClassificacao.tipo, 'responsavel'),
+          or(
+            ilike(pessoa.nomeCompleto, searchTerm),
+            ilike(pessoa.cpf, searchTerm)
+          )
+        )
+      )
+      .limit(10)
+      .orderBy(pessoa.nomeCompleto);
+
+    return { success: true, data };
+  } catch (error: any) {
+    console.error('Erro ao buscar responsáveis:', error);
     return { success: false, error: error.message };
   }
 }

@@ -2,75 +2,114 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createPessoa } from '@/actions/pessoa'
-import { LucideUser, LucideTags, LucideMapPin, LucidePhone, LucideSave, LucideLoader2, LucideBookOpen } from 'lucide-react'
-import { DadosPessoaisTab, ClassificacaoTab, EnderecoTab, ContatoTab, HabilitacaoTab, DadosAlunoTab, DadosFuncionarioTab } from './PessoaFormTabs'
+import { updatePessoa } from '@/actions/pessoa'
+import {
+  LucideUser, LucideTags, LucideMapPin, LucidePhone,
+  LucideSave, LucideLoader2, LucideBookOpen
+} from 'lucide-react'
+import {
+  DadosPessoaisTab, ClassificacaoTab, EnderecoTab,
+  ContatoTab, HabilitacaoTab, DadosAlunoTab, DadosFuncionarioTab
+} from '../../novo/PessoaFormTabs'
 
-export function PessoaForm({ disciplinas = [], turmas = [], defaultTipo = 'interessado' }: { disciplinas?: { id: string, nome: string }[], turmas?: { id: string, nome: string }[], defaultTipo?: string }) {
+type PessoaCompleta = {
+  id: string
+  nomeCompleto: string
+  cpf?: string | null
+  rg?: string | null
+  genero?: string | null
+  estadoCivil?: string | null
+  situacao?: string | null
+  dataNascimento?: Date | null
+  classificacoes: string[]
+  endereco?: {
+    cep: string; logradouro: string; numero: string
+    complemento?: string | null; bairro: string; cidade: string; uf: string
+  } | null
+  contatos?: { tipo: string; valor: string; principal?: boolean | null }[]
+  habilitacoes?: string[]
+  dadosAluno?: {
+    numeroMatricula?: string | null; ra?: string | null; codigoBarras?: string | null
+    loginPortal?: string | null; senhaPortalHash?: string | null
+    cartaoCatraca?: string | null; permitirBiblioteca?: boolean | null; turmaAtualId?: string | null
+  } | null
+  dadosFuncionario?: {
+    cargo?: string | null; departamento?: string | null; dataAdmissao?: Date | null
+    dataDemissao?: Date | null; salario?: number | null; cargaHoraria?: number | null
+    registroProfissional?: string | null
+  } | null
+}
+
+export function PessoaEditForm({
+  pessoa,
+  disciplinas = [],
+  turmas = [],
+}: {
+  pessoa: PessoaCompleta
+  disciplinas?: { id: string; nome: string }[]
+  turmas?: { id: string; nome: string }[]
+}) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('dados_pessoais')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
+
+  const toDateStr = (d?: Date | null) => {
+    if (!d) return ''
+    const dt = new Date(d)
+    return isNaN(dt.getTime()) ? '' : dt.toISOString().split('T')[0]
+  }
 
   const [formData, setFormData] = useState({
-    nomeCompleto: '',
-    dataNascimento: '',
-    cpf: '',
-    rg: '',
-    genero: 'nao_informado',
-    estadoCivil: 'solteiro',
-    situacao: 'ativo',
-    classificacoes: [defaultTipo] as string[],
+    nomeCompleto: pessoa.nomeCompleto || '',
+    cpf: pessoa.cpf || '',
+    rg: pessoa.rg || '',
+    genero: pessoa.genero || 'nao_informado',
+    estadoCivil: pessoa.estadoCivil || 'solteiro',
+    situacao: pessoa.situacao || 'ativo',
+    classificacoes: (pessoa.classificacoes || []) as string[],
     endereco: {
-      cep: '',
-      logradouro: '',
-      numero: '',
-      complemento: '',
-      bairro: '',
-      cidade: '',
-      uf: ''
+      cep: pessoa.endereco?.cep || '',
+      logradouro: pessoa.endereco?.logradouro || '',
+      numero: pessoa.endereco?.numero || '',
+      complemento: pessoa.endereco?.complemento || '',
+      bairro: pessoa.endereco?.bairro || '',
+      cidade: pessoa.endereco?.cidade || '',
+      uf: pessoa.endereco?.uf || '',
     },
-    contatos: [
-      { tipo: 'celular', valor: '', principal: true }
-    ],
-    habilitacoes: [] as string[],
+    contatos: pessoa.contatos && pessoa.contatos.length > 0
+      ? pessoa.contatos.map(c => ({ tipo: c.tipo, valor: c.valor, principal: c.principal ?? false }))
+      : [{ tipo: 'celular', valor: '', principal: true }],
+    habilitacoes: (pessoa.habilitacoes || []) as string[],
     dadosAluno: {
-      numeroMatricula: '',
-      ra: '',
-      codigoBarras: '',
-      loginPortal: '',
-      senhaPortalHash: '',
-      cartaoCatraca: '',
-      permitirBiblioteca: true,
-      turmaAtualId: '',
-      vinculos: [] as any[]
+      numeroMatricula: pessoa.dadosAluno?.numeroMatricula || '',
+      ra: pessoa.dadosAluno?.ra || '',
+      codigoBarras: pessoa.dadosAluno?.codigoBarras || '',
+      loginPortal: pessoa.dadosAluno?.loginPortal || '',
+      senhaPortalHash: pessoa.dadosAluno?.senhaPortalHash || '',
+      cartaoCatraca: pessoa.dadosAluno?.cartaoCatraca || '',
+      permitirBiblioteca: pessoa.dadosAluno?.permitirBiblioteca ?? true,
+      turmaAtualId: pessoa.dadosAluno?.turmaAtualId || '',
     },
     dadosFuncionario: {
-      cargo: '',
-      departamento: '',
-      dataAdmissao: '',
-      dataDemissao: '',
-      salario: '',
-      cargaHoraria: '',
-      registroProfissional: ''
-    }
+      cargo: pessoa.dadosFuncionario?.cargo || '',
+      departamento: pessoa.dadosFuncionario?.departamento || '',
+      dataAdmissao: toDateStr(pessoa.dadosFuncionario?.dataAdmissao),
+      dataDemissao: toDateStr(pessoa.dadosFuncionario?.dataDemissao),
+      salario: pessoa.dadosFuncionario?.salario ? String(pessoa.dadosFuncionario.salario / 100) : '',
+      cargaHoraria: pessoa.dadosFuncionario?.cargaHoraria ? String(pessoa.dadosFuncionario.cargaHoraria) : '',
+      registroProfissional: pessoa.dadosFuncionario?.registroProfissional || '',
+    },
   })
 
   const handleClassificacaoChange = (tipo: string) => {
     setFormData(prev => {
       const isSelected = prev.classificacoes.includes(tipo)
-      let newClassificacoes = []
-      if (isSelected) {
-        newClassificacoes = prev.classificacoes.filter(c => c !== tipo)
-      } else {
-        newClassificacoes = [...prev.classificacoes, tipo]
-      }
-      
-      let newHabilitacoes = prev.habilitacoes
-      if (isSelected && tipo === 'funcionario') {
-        newHabilitacoes = []
-      }
-      
+      const newClassificacoes = isSelected
+        ? prev.classificacoes.filter(c => c !== tipo)
+        : [...prev.classificacoes, tipo]
+      const newHabilitacoes = isSelected && tipo === 'funcionario' ? [] : prev.habilitacoes
       return { ...prev, classificacoes: newClassificacoes, habilitacoes: newHabilitacoes }
     })
   }
@@ -78,10 +117,11 @@ export function PessoaForm({ disciplinas = [], turmas = [], defaultTipo = 'inter
   const handleHabilitacaoChange = (id: string) => {
     setFormData(prev => {
       const isSelected = prev.habilitacoes.includes(id)
-      if (isSelected) {
-        return { ...prev, habilitacoes: prev.habilitacoes.filter(h => h !== id) }
-      } else {
-        return { ...prev, habilitacoes: [...prev.habilitacoes, id] }
+      return {
+        ...prev,
+        habilitacoes: isSelected
+          ? prev.habilitacoes.filter(h => h !== id)
+          : [...prev.habilitacoes, id],
       }
     })
   }
@@ -90,38 +130,17 @@ export function PessoaForm({ disciplinas = [], turmas = [], defaultTipo = 'inter
     e.preventDefault()
     setIsSubmitting(true)
     setError(null)
-
-    if (formData.classificacoes.includes('aluno')) {
-      if (formData.dataNascimento) {
-        const birthDate = new Date(formData.dataNascimento);
-        const ageDifMs = Date.now() - birthDate.getTime();
-        const ageDate = new Date(ageDifMs);
-        const age = Math.abs(ageDate.getUTCFullYear() - 1970);
-        
-        if (age < 18 && (!formData.dadosAluno.vinculos || formData.dadosAluno.vinculos.length === 0)) {
-          setError('Alunos menores de idade precisam ter pelo menos um Responsável vinculado.');
-          setIsSubmitting(false);
-          setActiveTab('dados_aluno');
-          return;
-        }
-      } else {
-        setError('Data de nascimento é obrigatória para alunos.');
-        setIsSubmitting(false);
-        setActiveTab('dados_pessoais');
-        return;
-      }
-    }
+    setSuccessMsg(null)
 
     const payload = {
       ...formData,
-      dataNascimento: formData.dataNascimento ? new Date(formData.dataNascimento) : undefined,
-      genero: formData.genero as 'masculino' | 'feminino' | 'outro' | 'nao_informado',
-      estadoCivil: formData.estadoCivil as 'solteiro' | 'casado' | 'divorciado' | 'viuvo' | 'uniao_estavel' | 'separado',
-      situacao: formData.situacao as 'ativo' | 'inativo' | 'suspenso' | 'transferido' | 'formado' | 'desistente',
+      genero: formData.genero as any,
+      estadoCivil: formData.estadoCivil as any,
+      situacao: formData.situacao as any,
       contatos: formData.contatos.map(c => ({
-        tipo: c.tipo as 'celular' | 'telefone_fixo' | 'email' | 'whatsapp',
+        tipo: c.tipo as any,
         valor: c.valor,
-        principal: c.principal
+        principal: c.principal,
       })),
       classificacoes: formData.classificacoes as any,
       dadosAluno: formData.classificacoes.includes('aluno') ? {
@@ -133,7 +152,6 @@ export function PessoaForm({ disciplinas = [], turmas = [], defaultTipo = 'inter
         cartaoCatraca: formData.dadosAluno.cartaoCatraca || undefined,
         permitirBiblioteca: formData.dadosAluno.permitirBiblioteca,
         turmaAtualId: formData.dadosAluno.turmaAtualId || undefined,
-        vinculos: formData.dadosAluno.vinculos
       } : undefined,
       dadosFuncionario: formData.classificacoes.includes('funcionario') ? {
         cargo: formData.dadosFuncionario.cargo || undefined,
@@ -142,26 +160,27 @@ export function PessoaForm({ disciplinas = [], turmas = [], defaultTipo = 'inter
         dataDemissao: formData.dadosFuncionario.dataDemissao ? new Date(formData.dadosFuncionario.dataDemissao) : undefined,
         salario: formData.dadosFuncionario.salario ? Math.round(parseFloat(formData.dadosFuncionario.salario) * 100) : undefined,
         cargaHoraria: formData.dadosFuncionario.cargaHoraria ? parseInt(formData.dadosFuncionario.cargaHoraria) : undefined,
-        registroProfissional: formData.dadosFuncionario.registroProfissional || undefined
-      } : undefined
+        registroProfissional: formData.dadosFuncionario.registroProfissional || undefined,
+      } : undefined,
     }
 
-    const result = await createPessoa(payload)
+    const result = await updatePessoa(pessoa.id, payload)
 
+    setIsSubmitting(false)
     if (result.success) {
-      router.push('/cadastros/pessoas')
+      setSuccessMsg('Dados salvos com sucesso!')
       router.refresh()
     } else {
       setError(result.error || 'Erro desconhecido ao salvar.')
-      setIsSubmitting(false)
     }
   }
 
-  const tabClass = (tabId: string) => `flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-    activeTab === tabId 
-      ? 'border-blue-600 text-blue-600' 
-      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-  }`
+  const tabClass = (tabId: string) =>
+    `flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+      activeTab === tabId
+        ? 'border-blue-600 text-blue-600'
+        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+    }`
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col">
@@ -201,6 +220,11 @@ export function PessoaForm({ disciplinas = [], turmas = [], defaultTipo = 'inter
             {error}
           </div>
         )}
+        {successMsg && (
+          <div className="mb-6 p-4 bg-green-50 text-green-700 rounded-lg text-sm border border-green-200">
+            ✅ {successMsg}
+          </div>
+        )}
 
         {activeTab === 'dados_pessoais' && (
           <DadosPessoaisTab formData={formData} setFormData={setFormData} />
@@ -228,7 +252,7 @@ export function PessoaForm({ disciplinas = [], turmas = [], defaultTipo = 'inter
       <div className="p-6 border-t border-gray-200 bg-gray-50 flex items-center justify-between rounded-b-xl">
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={() => router.push('/cadastros/pessoas')}
           className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors border border-gray-300"
         >
           Cancelar
@@ -239,7 +263,7 @@ export function PessoaForm({ disciplinas = [], turmas = [], defaultTipo = 'inter
           className="flex items-center gap-2 px-6 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm disabled:opacity-50"
         >
           {isSubmitting ? <LucideLoader2 size={18} className="animate-spin" /> : <LucideSave size={18} />}
-          Salvar Pessoa
+          Salvar Alterações
         </button>
       </div>
     </form>

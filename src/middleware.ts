@@ -27,11 +27,15 @@ export async function middleware(request: NextRequest) {
 
   // Redirect authenticated users away from auth pages
   if (user && (pathname === '/login' || pathname === '/signup')) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    return NextResponse.redirect(new URL('/', request.url))
   }
 
+  // Define rotas protegidas
+  const protectedRoutes = ['/secretaria', '/pedagogico', '/aee', '/cadastros', '/configuracoes', '/financeiro', '/responsavel'];
+  const isProtectedRoute = pathname === '/' || pathname === '/dashboard' || protectedRoutes.some(route => pathname.startsWith(route));
+
   // Protect dashboard and future routes
-  if (!user && pathname.startsWith('/dashboard')) {
+  if (!user && isProtectedRoute) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 

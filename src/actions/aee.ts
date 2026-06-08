@@ -3,12 +3,15 @@
 import { db } from '@/db';
 import { 
   pessoa, 
-  aeeProntuario, 
+  aeeProntuario,
+  aeeProntuarioEvolucao,
   aeePei, 
   aeePeiMeta, 
   aeeAtendimento, 
   aeeDocumento,
-  anoLetivo
+  anoLetivo,
+  matricula,
+  turma
 } from '@/db/schema';
 import { eq, desc, and } from 'drizzle-orm';
 import { createClient } from '@/lib/supabase/server';
@@ -26,7 +29,7 @@ async function checkAuth() {
   return user;
 }
 
-// Retorna todos os alunos que estão marcados com necessidade especial (laudo)
+// Retorna todos os alunos que estão marcados com necessidade especial (laudo) e seus dados de prontuário e turma
 export async function getAlunosAee() {
   await checkAuth();
 
@@ -36,13 +39,44 @@ export async function getAlunosAee() {
       nomeCompleto: pessoa.nomeCompleto,
       cpf: pessoa.cpf,
       dataNascimento: pessoa.dataNascimento,
-      situacao: CalcutateSituacao(pessoa.situacao),
+      situacao: pessoa.situacao,
+      // Dados do Prontuário
+      diagnostico: aeeProntuario.diagnostico,
+      medicacoesEmUso: aeeProntuario.medicacoesEmUso,
+      aspectosPositivos: aeeProntuario.aspectosPositivos,
+      dificuldades: aeeProntuario.dificuldades,
+      adaptacoesAtividades: aeeProntuario.adaptacoesAtividades,
+      relatoriosTexto: aeeProntuario.relatoriosTexto,
+      horarioAtendimento: aeeProntuario.horarioAtendimento,
+      feedbackReunioes: aeeProntuario.feedbackReunioes,
+      // Dados da Turma
+      turmaNome: turma.nome,
     })
     .from(pessoa)
+    .leftJoin(aeeProntuario, eq(pessoa.id, aeeProntuario.alunoId))
+    .leftJoin(matricula, eq(pessoa.id, matricula.alunoId))
+    .leftJoin(turma, eq(matricula.turmaId, turma.id))
     .where(eq(pessoa.necessidadeEspecial, true))
     .orderBy(pessoa.nomeCompleto);
 
-  return alunos;
+  // Eliminar duplicatas caso haja múltiplas matrículas ativas/inativas e deixar apenas a primeira ou agrupar
+  // Para simplificar, agruparemos por id do aluno
+  const map = new Map<string, any>();
+  for (const a of alunos) {
+    if (!map.has(a.id)) {
+      map.set(a.id, {
+        ...a,
+        situacao: CalcutateSituacao(a.situacao)
+      });
+    } else {
+      // Se houver mais de uma turma, concatena
+      if (a.turmaNome && !map.get(a.id).turmaNome?.includes(a.turmaNome)) {
+        map.get(a.id).turmaNome += `, ${a.turmaNome}`;
+      }
+    }
+  }
+
+  return Array.from(map.values());
 }
 
 // Auxiliar para contornar problemas de tipo
@@ -377,3 +411,53 @@ export async function getAnosLetivos() {
   }
 }
 
+export async function getAeeEvolucoes(prontuarioId: string) {
+  try {
+    await checkAuth();
+
+    const evolucoes = await db
+      .select({
+        id: aeeProntuarioEvolucao.id,
+        prontuarioId: aeeProntuarioEvolucao.prontuarioId,
+        papel: aeeProntuarioEvolucao.papel,
+        descricao: aeeProntuarioEvolucao.descricao,
+        createdAt: aeeProntuarioEvolucao.createdAt,
+        autorNome: pessoa.nomeCompleto,
+      })
+      .from(aeeProntuarioEvolucao)
+      .leftJoin(pessoa, eq(aeeProntuarioEvolucao.autorId, pessoa.id))
+      .where(eq(aeeProntuarioEvolucao.prontuarioId, prontuarioId))
+      .orderBy(desc(aeeProntuarioEvolucao.createdAt));
+
+    return { success: true, data: evolucoes };
+  } catch (error: any) {
+    console.error('Erro ao buscar evoluções:', error);
+    return { success: false, error: error.message || 'Erro ao buscar evoluções' };
+  }
+}
+
+export async function addAeeEvolucao(data: {
+  prontuarioId: string;
+  papel: 'Professor' | 'Equipe AEE' | 'Família' | 'Profissional de Saúde' | 'Coordenação' | 'Outros';
+  descricao: string;
+}) {
+  try {
+    const user = await checkAuth();
+
+    const [evolucao] = await db
+      .insert(aeeProntuarioEvolucao)
+      .values({
+        prontuarioId: data.prontuarioId,
+        autorId: user.id,
+        papel: data.papel,
+        descricao: data.descricao,
+      })
+      .returning();
+
+    revalidatePath('/aee');
+    return { success: true, data: evolucao };
+  } catch (error: any) {
+    console.error('Erro ao adicionar evolução:', error);
+    return { success: false, error: error.message || 'Erro ao adicionar evolução' };
+  }
+}

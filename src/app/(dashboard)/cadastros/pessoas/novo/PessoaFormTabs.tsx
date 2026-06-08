@@ -1,6 +1,8 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
+import { LucideTrash2 } from 'lucide-react'
+import { ResponsavelSelector } from '@/components/ui/ResponsavelSelector'
 
 export function DadosPessoaisTab({ formData, setFormData }: { formData: any, setFormData: any }) {
   return (
@@ -14,6 +16,15 @@ export function DadosPessoaisTab({ formData, setFormData }: { formData: any, set
           onChange={e => setFormData({...formData, nomeCompleto: e.target.value})}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
           placeholder="Nome completo da pessoa"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Data de Nascimento</label>
+        <input
+          type="date"
+          value={formData.dataNascimento ? new Date(formData.dataNascimento).toISOString().split('T')[0] : ''}
+          onChange={e => setFormData({...formData, dataNascimento: e.target.value})}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
         />
       </div>
       <div>
@@ -334,6 +345,122 @@ export function DadosAlunoTab({ formData, setFormData, turmas = [] }: { formData
           />
           <span className="ml-3 text-sm font-medium text-gray-700">Permitir Empréstimo na Biblioteca</span>
         </label>
+      </div>
+
+      <div className="md:col-span-2 lg:col-span-3 pt-6 mt-6 border-t border-gray-200">
+        <h3 className="text-base font-medium text-gray-900 mb-4">Responsáveis do Aluno</h3>
+        
+        <div className="mb-6 bg-gray-50 p-4 rounded-xl border border-gray-200">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Vincular Novo Responsável</label>
+          <ResponsavelSelector 
+            onSelect={(r) => {
+              const currentVinculos = formData.dadosAluno.vinculos || [];
+              if (currentVinculos.find((v: any) => v.responsavelId === r.id)) {
+                return; // já adicionado
+              }
+              const novoVinculo = {
+                responsavelId: r.id,
+                responsavelNome: r.nomeCompleto,
+                responsavelCpf: r.cpf,
+                grauParentesco: 'Pai/Mãe',
+                responsavelFinanceiro: false,
+                responsavelPedagogico: true,
+                autorizadoRetirada: true
+              }
+              updateDadosAluno('vinculos', [...currentVinculos, novoVinculo])
+            }} 
+          />
+          <p className="mt-2 text-xs text-gray-500">
+            Atenção: A pessoa já deve estar cadastrada no sistema com a classificação "Responsável".
+          </p>
+        </div>
+
+        {formData.dadosAluno.vinculos && formData.dadosAluno.vinculos.length > 0 ? (
+          <div className="space-y-4">
+            {formData.dadosAluno.vinculos.map((vinculo: any, index: number) => (
+              <div key={vinculo.responsavelId} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 border border-gray-200 rounded-xl bg-white shadow-sm">
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">{vinculo.responsavelNome}</p>
+                  <p className="text-xs text-gray-500">CPF: {vinculo.responsavelCpf || 'Não informado'}</p>
+                </div>
+                
+                <div className="flex-1 w-full sm:w-auto">
+                  <label className="block text-xs text-gray-500 mb-1">Parentesco</label>
+                  <input 
+                    type="text" 
+                    value={vinculo.grauParentesco}
+                    onChange={(e) => {
+                      const newVinculos = [...formData.dadosAluno.vinculos]
+                      newVinculos[index].grauParentesco = e.target.value
+                      updateDadosAluno('vinculos', newVinculos)
+                    }}
+                    className="w-full px-3 py-1.5 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                    placeholder="Ex: Pai, Mãe, Avó..."
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="flex items-center cursor-pointer text-sm">
+                    <input
+                      type="checkbox"
+                      checked={vinculo.responsavelFinanceiro}
+                      onChange={(e) => {
+                        const newVinculos = [...formData.dadosAluno.vinculos]
+                        newVinculos[index].responsavelFinanceiro = e.target.checked
+                        updateDadosAluno('vinculos', newVinculos)
+                      }}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600 mr-2"
+                    />
+                    Financeiro
+                  </label>
+                  <label className="flex items-center cursor-pointer text-sm">
+                    <input
+                      type="checkbox"
+                      checked={vinculo.responsavelPedagogico}
+                      onChange={(e) => {
+                        const newVinculos = [...formData.dadosAluno.vinculos]
+                        newVinculos[index].responsavelPedagogico = e.target.checked
+                        updateDadosAluno('vinculos', newVinculos)
+                      }}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600 mr-2"
+                    />
+                    Pedagógico
+                  </label>
+                  <label className="flex items-center cursor-pointer text-sm">
+                    <input
+                      type="checkbox"
+                      checked={vinculo.autorizadoRetirada}
+                      onChange={(e) => {
+                        const newVinculos = [...formData.dadosAluno.vinculos]
+                        newVinculos[index].autorizadoRetirada = e.target.checked
+                        updateDadosAluno('vinculos', newVinculos)
+                      }}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600 mr-2"
+                    />
+                    Autorizado a retirar
+                  </label>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newVinculos = [...formData.dadosAluno.vinculos]
+                    newVinculos.splice(index, 1)
+                    updateDadosAluno('vinculos', newVinculos)
+                  }}
+                  className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors ml-auto sm:ml-0"
+                  title="Remover vínculo"
+                >
+                  <LucideTrash2 size={18} />
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-xl">
+            <p className="text-gray-500 text-sm">Nenhum responsável vinculado a este aluno.</p>
+          </div>
+        )}
       </div>
     </div>
   )

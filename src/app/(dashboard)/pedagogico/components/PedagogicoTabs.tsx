@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { LucideGraduationCap, LucideLayers, LucideUsers, LucideBook, LucideHome, LucideListCollapse } from 'lucide-react'
+import { LucideGraduationCap, LucideLayers, LucideUsers, LucideBook, LucideHome, LucideListCollapse, LucideFileText } from 'lucide-react'
 import { NivelEnsinoTab } from './NivelEnsinoTab'
 import { SerieTab } from './SerieTab'
 import { TurmaTab } from './TurmaTab'
@@ -9,6 +9,9 @@ import { DisciplinaTab } from './DisciplinaTab'
 import { DiarioClasseTab } from './DiarioClasseTab'
 import { SalaTab } from './SalaTab'
 import { GradeCurricularTab } from './GradeCurricularTab'
+import { BoletimTab } from './BoletimTab'
+import { PlanilhaNotasTab } from './PlanilhaNotasTab'
+import { CalendarioPedagogicoTab } from './CalendarioPedagogicoTab'
 
 export function PedagogicoTabs() {
   const [activeTab, setActiveTab] = useState('niveis')
@@ -101,6 +104,42 @@ export function PedagogicoTabs() {
           <LucideBook size={18} />
           Diário de Classe
         </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('boletins')}
+          className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+            activeTab === 'boletins' 
+              ? 'border-blue-600 text-blue-600 bg-white dark:bg-slate-900 dark:text-blue-400 dark:border-blue-500' 
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-slate-400 dark:hover:text-slate-200'
+          }`}
+        >
+          <LucideFileText size={18} />
+          Boletins Individuais
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('planilha_notas')}
+          className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+            activeTab === 'planilha_notas' 
+              ? 'border-blue-600 text-blue-600 bg-white dark:bg-slate-900 dark:text-blue-400 dark:border-blue-500' 
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-slate-400 dark:hover:text-slate-200'
+          }`}
+        >
+          <LucideListCollapse size={18} />
+          Planilha de Coordenação (Notas)
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('calendario')}
+          className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+            activeTab === 'calendario' 
+              ? 'border-blue-600 text-blue-600 bg-white dark:bg-slate-900 dark:text-blue-400 dark:border-blue-500' 
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-slate-400 dark:hover:text-slate-200'
+          }`}
+        >
+          <LucideListCollapse size={18} />
+          Calendário Pedagógico
+        </button>
       </div>
 
       <div className="p-6">
@@ -111,6 +150,9 @@ export function PedagogicoTabs() {
         {activeTab === 'salas' && <SalaTab />}
         {activeTab === 'disciplinas' && <DisciplinaTab />}
         {activeTab === 'diario' && <DiarioClasseTab />}
+        {activeTab === 'boletins' && <BoletimTab />}
+        {activeTab === 'planilha_notas' && <PlanilhaNotasTab />}
+        {activeTab === 'calendario' && <CalendarioPedagogicoTab />}
       </div>
     </div>
   )

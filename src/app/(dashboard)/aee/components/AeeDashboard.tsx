@@ -108,11 +108,17 @@ export default function AeeDashboard() {
           <table className="w-full text-left text-sm text-slate-600 dark:text-slate-305">
             <thead className="bg-gray-50 dark:bg-slate-800 text-slate-705 dark:text-slate-200 font-semibold border-b border-gray-200 dark:border-slate-800">
               <tr>
-                <th className="p-4">Nome do Aluno</th>
-                <th className="p-4">CPF</th>
-                <th className="p-4">Data Nascimento</th>
-                <th className="p-4">Situação</th>
-                <th className="p-4 text-center">Ações</th>
+                <th className="p-4 whitespace-nowrap">Turma</th>
+                <th className="p-4 min-w-[200px]">Nome do Aluno</th>
+                <th className="p-4 min-w-[200px]">Diagnóstico</th>
+                <th className="p-4 min-w-[200px]">Medicações em Uso</th>
+                <th className="p-4 min-w-[250px]">Aspectos Positivos</th>
+                <th className="p-4 min-w-[250px]">Dificuldades</th>
+                <th className="p-4 min-w-[250px]">Adaptações</th>
+                <th className="p-4 min-w-[200px]">Relatórios</th>
+                <th className="p-4 min-w-[200px]">Horário de Atendimento</th>
+                <th className="p-4 min-w-[250px]">Feedback Reuniões</th>
+                <th className="p-4 text-center sticky right-0 bg-gray-50 dark:bg-slate-800 shadow-[-4px_0_6px_-1px_rgba(0,0,0,0.05)]">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
@@ -125,19 +131,23 @@ export default function AeeDashboard() {
               ) : (
                 filteredAlunos.map(aluno => (
                   <tr key={aluno.id} className="hover:bg-gray-50 dark:hover:bg-slate-850/50 transition-colors">
+                    <td className="p-4 whitespace-nowrap">{aluno.turmaNome || '-'}</td>
                     <td className="p-4 font-medium text-slate-900 dark:text-slate-100">{aluno.nomeCompleto}</td>
-                    <td className="p-4">{aluno.cpf || 'Não informado'}</td>
-                    <td className="p-4">
-                      {aluno.dataNascimento ? new Date(aluno.dataNascimento).toLocaleDateString('pt-BR') : '-'}
-                    </td>
-                    <td className="p-4 capitalize">{aluno.situacao}</td>
-                    <td className="p-4 text-center">
+                    <td className="p-4 text-xs">{aluno.diagnostico || '-'}</td>
+                    <td className="p-4 text-xs">{aluno.medicacoesEmUso || '-'}</td>
+                    <td className="p-4 text-xs line-clamp-3" title={aluno.aspectosPositivos}>{aluno.aspectosPositivos || '-'}</td>
+                    <td className="p-4 text-xs line-clamp-3" title={aluno.dificuldades}>{aluno.dificuldades || '-'}</td>
+                    <td className="p-4 text-xs line-clamp-3" title={aluno.adaptacoesAtividades}>{aluno.adaptacoesAtividades || '-'}</td>
+                    <td className="p-4 text-xs line-clamp-3" title={aluno.relatoriosTexto}>{aluno.relatoriosTexto || '-'}</td>
+                    <td className="p-4 text-xs">{aluno.horarioAtendimento || '-'}</td>
+                    <td className="p-4 text-xs line-clamp-3" title={aluno.feedbackReunioes}>{aluno.feedbackReunioes || '-'}</td>
+                    <td className="p-4 text-center sticky right-0 bg-white dark:bg-slate-900 group-hover:bg-gray-50 dark:group-hover:bg-slate-850/50 shadow-[-4px_0_6px_-1px_rgba(0,0,0,0.05)]">
                       <button 
                         onClick={() => handleEditProntuario(aluno.id)}
-                        className="text-[var(--color-csm-green)] hover:opacity-85 font-medium flex items-center justify-center gap-1 w-full"
+                        className="text-[var(--color-csm-green)] hover:opacity-85 font-medium flex flex-col items-center justify-center gap-1 w-full"
                       >
-                        <LucideFileText size={16} />
-                        Ver Prontuário
+                        <LucideFileText size={18} />
+                        <span className="text-[10px] uppercase tracking-wider">Prontuário</span>
                       </button>
                     </td>
                   </tr>
