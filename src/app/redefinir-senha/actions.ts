@@ -16,7 +16,7 @@ export async function sendResetLink(formData: FormData) {
   const origin = `${protocol}://${host}`;
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?next=/atualizar-senha`,
+    redirectTo: `${origin}/atualizar-senha`,
   })
 
   if (error) {
@@ -26,3 +26,4 @@ export async function sendResetLink(formData: FormData) {
 
   redirect('/redefinir-senha?success=true')
 }
+
