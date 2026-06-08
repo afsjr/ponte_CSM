@@ -73,6 +73,7 @@ describe('Pessoa Server Actions', () => {
     // Mock simplificado do select encadeado do Drizzle
     const mockSelect = {
       from: vi.fn().mockReturnThis(),
+      leftJoin: vi.fn().mockReturnThis(),
       where: vi.fn().mockReturnThis(),
       orderBy: vi.fn().mockReturnThis(),
       limit: vi.fn().mockReturnThis(),
@@ -83,7 +84,12 @@ describe('Pessoa Server Actions', () => {
     vi.mocked(db.select)
       .mockReturnValueOnce(mockSelect as any) // para baseQuery
       .mockReturnValueOnce({
-        from: vi.fn().mockResolvedValue([{ value: 1 }]) // para countQuery
+        from: vi.fn().mockReturnThis(),
+        leftJoin: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        then: vi.fn().mockImplementation((onfulfilled) => {
+          return Promise.resolve([{ value: 1 }]).then(onfulfilled);
+        })
       } as any)
 
     const result = await getPessoas({ page: 2, limit: 10 })

@@ -50,7 +50,10 @@ async function main() {
   'aee_pei',
   'aee_pei_meta',
   'aee_atendimento',
-  'aee_documento'
+  'aee_documento',
+  'aee_prontuario_evolucao',
+  'notas_boletim',
+  'calendario_pedagogico'
 ];
 
   for (const table of tables) {
