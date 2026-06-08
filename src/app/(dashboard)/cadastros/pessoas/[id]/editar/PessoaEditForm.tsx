@@ -139,7 +139,7 @@ export function PessoaEditForm({
 
     const payload = {
       ...formData,
-      dataNascimento: formData.dataNascimento ? new Date(formData.dataNascimento) : null,
+      dataNascimento: formData.dataNascimento ? new Date(formData.dataNascimento) : undefined,
       genero: formData.genero as any,
       estadoCivil: formData.estadoCivil as any,
       situacao: formData.situacao as any,
