@@ -38,6 +38,7 @@ export default async function AtualizarSenhaPage(props: { searchParams: Promise<
               required
               placeholder="••••••••"
               minLength={6}
+              autoComplete="new-password"
               className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
             />
           </div>
@@ -52,6 +53,7 @@ export default async function AtualizarSenhaPage(props: { searchParams: Promise<
               required
               placeholder="••••••••"
               minLength={6}
+              autoComplete="new-password"
               className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
             />
           </div>

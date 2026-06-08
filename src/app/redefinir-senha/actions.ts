@@ -16,10 +16,11 @@ export async function sendResetLink(formData: FormData) {
   const origin = `${protocol}://${host}`;
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/atualizar-senha`,
+    redirectTo: `${origin}/auth/callback?next=/atualizar-senha`,
   })
 
   if (error) {
+    console.error('ERRO SUPABASE AUTH:', error);
     redirect('/redefinir-senha?error=Não foi possível enviar o e-mail. Verifique se o endereço está correto.')
   }
 
