@@ -55,10 +55,14 @@ export function PessoaEditForm({
   const [error, setError] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
-  const toDateStr = (d?: Date | null) => {
+  const toDateStr = (d?: Date | string | null) => {
     if (!d) return ''
-    const dt = new Date(d)
-    return isNaN(dt.getTime()) ? '' : dt.toISOString().split('T')[0]
+    try {
+      const dt = new Date(d)
+      return isNaN(dt.getTime()) ? '' : dt.toISOString().split('T')[0]
+    } catch {
+      return ''
+    }
   }
 
   const [formData, setFormData] = useState({
@@ -68,6 +72,7 @@ export function PessoaEditForm({
     genero: pessoa.genero || 'nao_informado',
     estadoCivil: pessoa.estadoCivil || 'solteiro',
     situacao: pessoa.situacao || 'ativo',
+    dataNascimento: toDateStr(pessoa.dataNascimento),
     classificacoes: (pessoa.classificacoes || []) as string[],
     endereco: {
       cep: pessoa.endereco?.cep || '',
@@ -134,6 +139,7 @@ export function PessoaEditForm({
 
     const payload = {
       ...formData,
+      dataNascimento: formData.dataNascimento ? new Date(formData.dataNascimento) : null,
       genero: formData.genero as any,
       estadoCivil: formData.estadoCivil as any,
       situacao: formData.situacao as any,
