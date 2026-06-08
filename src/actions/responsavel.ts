@@ -18,9 +18,10 @@ import {
   ocorrenciaAluno,
   periodoAvaliativo,
   auditLog,
-  avaliacao
+  avaliacao,
+  contato
 } from '@/db/schema';
-import { eq, and, desc, inArray } from 'drizzle-orm';
+import { eq, and, desc, inArray, ilike } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
@@ -60,6 +61,49 @@ export async function getResponsaveisList() {
   } catch (error) {
     console.error('Erro ao buscar lista de responsáveis:', error);
     return [];
+  }
+}
+
+export async function getLoggedResponsavelId() {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      if (process.env.NODE_ENV === 'development') {
+        return { success: true, id: '00000000-0000-0000-0000-000000000000', isMock: true };
+      }
+      return { success: false, error: 'User not logged in' };
+    }
+
+    const userEmail = user.email;
+    if (!userEmail) {
+      return { success: false, error: 'User has no email' };
+    }
+
+    // Busca contato do tipo email
+    const [emailContato] = await db
+      .select({ pessoaId: contato.pessoaId })
+      .from(contato)
+      .where(and(eq(contato.tipo, 'email'), ilike(contato.valor, userEmail.trim())));
+
+    if (!emailContato) {
+      // Se não encontrar o contato, tenta ver se o ID é o mesmo
+      const [directPessoa] = await db
+        .select({ id: pessoa.id })
+        .from(pessoa)
+        .where(eq(pessoa.id, user.id));
+
+      if (directPessoa) {
+        return { success: true, id: directPessoa.id };
+      }
+
+      return { success: false, error: `Contato de email não cadastrado no sistema para o email: ${userEmail}` };
+    }
+
+    return { success: true, id: emailContato.pessoaId };
+  } catch (error: any) {
+    console.error('Erro ao resolver responsável logado:', error);
+    return { success: false, error: error.message };
   }
 }
 

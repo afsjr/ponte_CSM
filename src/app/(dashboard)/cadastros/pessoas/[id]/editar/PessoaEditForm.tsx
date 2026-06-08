@@ -96,6 +96,7 @@ export function PessoaEditForm({
       cartaoCatraca: pessoa.dadosAluno?.cartaoCatraca || '',
       permitirBiblioteca: pessoa.dadosAluno?.permitirBiblioteca ?? true,
       turmaAtualId: pessoa.dadosAluno?.turmaAtualId || '',
+      vinculos: (pessoa.dadosAluno as any)?.vinculos || [],
     },
     dadosFuncionario: {
       cargo: pessoa.dadosFuncionario?.cargo || '',
@@ -158,6 +159,13 @@ export function PessoaEditForm({
         cartaoCatraca: formData.dadosAluno.cartaoCatraca || undefined,
         permitirBiblioteca: formData.dadosAluno.permitirBiblioteca,
         turmaAtualId: formData.dadosAluno.turmaAtualId || undefined,
+        vinculos: formData.dadosAluno.vinculos ? formData.dadosAluno.vinculos.map((v: any) => ({
+          responsavelId: v.responsavelId,
+          grauParentesco: v.grauParentesco,
+          responsavelFinanceiro: v.responsavelFinanceiro,
+          responsavelPedagogico: v.responsavelPedagogico,
+          autorizadoRetirada: v.autorizadoRetirada,
+        })) : undefined,
       } : undefined,
       dadosFuncionario: formData.classificacoes.includes('funcionario') ? {
         cargo: formData.dadosFuncionario.cargo || undefined,

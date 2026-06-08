@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Megaphone, Calendar, Award, AlertTriangle, CheckCircle2, User, RefreshCw } from 'lucide-react'
-import { getFilhosVinculados, getBoletimEHorarioFilho, getMuralAvisosResponsavel, marcarCienteAviso } from '@/actions/responsavel'
+import { getFilhosVinculados, getBoletimEHorarioFilho, getMuralAvisosResponsavel, marcarCienteAviso, getLoggedResponsavelId } from '@/actions/responsavel'
 import { getPessoas } from '@/actions/pessoa' // para o seletor de debug
 
 export default function PortalResponsavelPage() {
@@ -34,7 +34,7 @@ export default function PortalResponsavelPage() {
     domingo: 'Domingo'
   }
 
-  // Detecta dia da semana atual
+  // Detecta dia da semana atual e resolve responsável logado
   useEffect(() => {
     const diaNum = new Date().getDay() // 0=domingo, 1=segunda...
     const mapeamento: any = {
@@ -53,8 +53,15 @@ export default function PortalResponsavelPage() {
       setIsDev(true)
       loadResponsaveis()
     } else {
-      // Produção: Usa ID fixo simulado de auth
-      setSelectedResponsavelId('00000000-0000-0000-0000-000000000000')
+      // Produção: Resolve o ID do usuário real autenticado
+      getLoggedResponsavelId().then((res) => {
+        if (res.success && res.id) {
+          setSelectedResponsavelId(res.id)
+        } else {
+          // Fallback se não conseguir resolver
+          setSelectedResponsavelId('00000000-0000-0000-0000-000000000000')
+        }
+      })
     }
   }, [])
 
@@ -63,14 +70,24 @@ export default function PortalResponsavelPage() {
     try {
       const res = await getPessoas({ limit: 100 }) // busca pessoas gerais
       if (res.success && res.data) {
-        const respOnly = res.data.filter((p: any) => 
-          p.classificacoes && p.classificacoes.includes('responsavel')
-        )
-        setResponsaveis(respOnly.length > 0 ? respOnly : res.data)
+        // Deduplica e filtra por tipo 'responsavel'
+        const uniqueMap = new Map()
+        res.data.forEach((p: any) => {
+          if (!uniqueMap.has(p.id)) {
+            uniqueMap.set(p.id, p)
+          } else if (p.tipo === 'responsavel') {
+            // Se já existe mas este registro é o de responsável, substitui para garantir
+            uniqueMap.set(p.id, p)
+          }
+        })
+        const uniquePessoas = Array.from(uniqueMap.values())
+        const respOnly = uniquePessoas.filter((p: any) => p.tipo === 'responsavel')
+        
+        setResponsaveis(respOnly.length > 0 ? respOnly : uniquePessoas)
         if (respOnly.length > 0) {
           setSelectedResponsavelId(respOnly[0].id)
-        } else if (res.data.length > 0) {
-          setSelectedResponsavelId(res.data[0].id)
+        } else if (uniquePessoas.length > 0) {
+          setSelectedResponsavelId(uniquePessoas[0].id)
         }
       }
     } catch (err) {
