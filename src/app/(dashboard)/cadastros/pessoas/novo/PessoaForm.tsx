@@ -3,13 +3,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createPessoa } from '@/actions/pessoa'
-import { LucideUser, LucideTags, LucideMapPin, LucidePhone, LucideSave, LucideLoader2, LucideBookOpen } from 'lucide-react'
+import { LucideUser, LucideTags, LucideMapPin, LucidePhone, LucideSave, LucideLoader2, LucideBookOpen, LucideCheckCircle } from 'lucide-react'
 import { DadosPessoaisTab, ClassificacaoTab, EnderecoTab, ContatoTab, HabilitacaoTab, DadosAlunoTab, DadosFuncionarioTab } from './PessoaFormTabs'
 
 export function PessoaForm({ disciplinas = [], turmas = [], defaultTipo = 'interessado' }: { disciplinas?: { id: string, nome: string }[], turmas?: { id: string, nome: string }[], defaultTipo?: string }) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('dados_pessoais')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
@@ -182,8 +183,10 @@ export function PessoaForm({ disciplinas = [], turmas = [], defaultTipo = 'inter
       const result = await createPessoa(payload)
 
       if (result.success) {
-        router.push('/cadastros/pessoas')
-        router.refresh()
+        setIsSuccess(true)
+        setTimeout(() => {
+          router.push('/cadastros/pessoas')
+        }, 1500)
       } else {
         setError(result.error || 'Erro desconhecido ao salvar.')
         setIsSubmitting(false)
@@ -240,6 +243,13 @@ export function PessoaForm({ disciplinas = [], turmas = [], defaultTipo = 'inter
           </div>
         )}
 
+        {isSuccess && (
+          <div className="mb-6 p-4 bg-green-50 text-green-700 rounded-lg text-sm border border-green-200 flex items-center gap-2">
+            <LucideCheckCircle size={20} className="text-green-600" />
+            <span className="font-medium">Cadastro salvo com sucesso! Redirecionando...</span>
+          </div>
+        )}
+
         {activeTab === 'dados_pessoais' && (
           <DadosPessoaisTab formData={formData} setFormData={setFormData} />
         )}
@@ -273,11 +283,12 @@ export function PessoaForm({ disciplinas = [], turmas = [], defaultTipo = 'inter
         </button>
         <button
           type="submit"
-          disabled={isSubmitting}
-          className="flex items-center gap-2 px-6 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm disabled:opacity-50"
+          disabled={isSubmitting || isSuccess}
+          className={`flex items-center gap-2 px-6 py-2 text-sm font-medium text-white rounded-lg transition-colors shadow-sm disabled:opacity-50 ${isSuccess ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'}`}
         >
-          {isSubmitting ? <LucideLoader2 size={18} className="animate-spin" /> : <LucideSave size={18} />}
-          Salvar Pessoa
+          {isSubmitting && !isSuccess ? <LucideLoader2 size={18} className="animate-spin" /> : 
+           isSuccess ? <LucideCheckCircle size={18} /> : <LucideSave size={18} />}
+          {isSuccess ? 'Salvo!' : 'Salvar Pessoa'}
         </button>
       </div>
     </form>

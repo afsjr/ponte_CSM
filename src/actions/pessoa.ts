@@ -4,6 +4,7 @@ import { db } from '@/db'
 import { pessoa, pessoaClassificacao, endereco, contato, anexo, funcionarioHabilitacao, auditLog, dadosAluno, dadosFuncionario, vinculoResponsavelAluno } from '@/db/schema'
 import { eq, like, or, ilike, desc, count, and } from 'drizzle-orm'
 import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
 
 async function checkAuth() {
   const supabase = await createClient()
@@ -112,7 +113,7 @@ export type CreatePessoaParams = {
 export async function createPessoa(data: CreatePessoaParams) {
   try {
     const user = await checkAuth()
-    const { classificacoes, habilitacoes, dadosAluno: alunoInputData, dadosFuncionario: funcionarioInputData, ...pessoaData } = data;
+    const { classificacoes, habilitacoes, dadosAluno: alunoInputData, dadosFuncionario: funcionarioInputData, contatos: contatosInput, endereco: enderecoInput, ...pessoaData } = data;
 
     const isAdmin = checkIsAdmin(user);
     if (classificacoes.includes('funcionario') && funcionarioInputData) {
@@ -149,16 +150,16 @@ export async function createPessoa(data: CreatePessoaParams) {
       }
 
       // 3. Criar Endereço
-      if (data.endereco && data.endereco.cep) {
+      if (enderecoInput && enderecoInput.cep) {
         await tx.insert(endereco).values({
           pessoaId: novaPessoa.id,
-          ...data.endereco
+          ...enderecoInput
         });
       }
 
       // 4. Criar Contatos
-      if (data.contatos && data.contatos.length > 0) {
-        const contatosInsert = data.contatos.map(c => ({
+      if (contatosInput && contatosInput.length > 0) {
+        const contatosInsert = contatosInput.map(c => ({
           pessoaId: novaPessoa.id,
           tipo: c.tipo,
           valor: c.valor,
@@ -231,6 +232,7 @@ export async function createPessoa(data: CreatePessoaParams) {
       return novaPessoa.id;
     });
 
+    revalidatePath('/cadastros/pessoas');
     return { success: true, id: novaPessoaId };
   } catch (error: any) {
     console.error('Erro ao criar pessoa:', error);
