@@ -218,7 +218,15 @@ export function ContatoTab({ formData, setFormData }: { formData: any, setFormDa
 
 export function HabilitacaoTab({ formData, disciplinas, handleHabilitacaoChange }: { formData: any, disciplinas: any[], handleHabilitacaoChange: (id: string) => void }) {
   return (
-    <div>
+    <div className="space-y-4">
+      <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800 flex items-start gap-3 shadow-sm">
+        <span className="text-lg leading-none">💡</span>
+        <div>
+          <strong className="font-semibold block mb-0.5">Nota de Habilitação do Docente:</strong>
+          A vinculação de disciplinas é opcional e aplicável especificamente para professores/docentes. Se o funcionário desempenhar funções administrativas ou gerais, este passo não é obrigatório.
+        </div>
+      </div>
+
       <h3 className="text-sm font-medium text-gray-700 mb-4">Selecione as disciplinas que este professor está habilitado a lecionar:</h3>
       {disciplinas.length === 0 ? (
         <p className="text-sm text-gray-500">Nenhuma disciplina cadastrada no sistema.</p>
@@ -478,75 +486,204 @@ export function DadosFuncionarioTab({ formData, setFormData }: { formData: any, 
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Cargo</label>
-        <input
-          type="text"
-          value={formData.dadosFuncionario.cargo}
-          onChange={e => updateDadosFuncionario('cargo', e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-          placeholder="Ex: Professor de Matemática"
-        />
+    <div className="space-y-8">
+      {/* 1. Informações Contratuais */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-4">
+        <h4 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-3 flex items-center gap-2">
+          <span className="text-xl">💼</span> Informações Contratuais
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cargo</label>
+            <input
+              type="text"
+              value={formData.dadosFuncionario.cargo || ''}
+              onChange={e => updateDadosFuncionario('cargo', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="Ex: Auxiliar de Secretaria"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Departamento</label>
+            <input
+              type="text"
+              value={formData.dadosFuncionario.departamento || ''}
+              onChange={e => updateDadosFuncionario('departamento', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="Ex: Administrativo"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Registro Profissional</label>
+            <input
+              type="text"
+              value={formData.dadosFuncionario.registroProfissional || ''}
+              onChange={e => updateDadosFuncionario('registroProfissional', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="Ex: MEC, OAB, etc."
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Salário Mensal (R$)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={formData.dadosFuncionario.salario || ''}
+              onChange={e => updateDadosFuncionario('salario', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="Ex: 3500.00"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Carga Horária Semanal (Horas)</label>
+            <input
+              type="number"
+              value={formData.dadosFuncionario.cargaHoraria || ''}
+              onChange={e => updateDadosFuncionario('cargaHoraria', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="Ex: 40"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Data de Admissão</label>
+            <input
+              type="date"
+              value={formData.dadosFuncionario.dataAdmissao || ''}
+              onChange={e => updateDadosFuncionario('dataAdmissao', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Data de Demissão (se houver)</label>
+            <input
+              type="date"
+              value={formData.dadosFuncionario.dataDemissao || ''}
+              onChange={e => updateDadosFuncionario('dataDemissao', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+          </div>
+        </div>
       </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Departamento</label>
-        <input
-          type="text"
-          value={formData.dadosFuncionario.departamento}
-          onChange={e => updateDadosFuncionario('departamento', e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-          placeholder="Ex: Pedagógico"
-        />
+
+      {/* 2. Dados de Pagamento & Bancários */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-4">
+        <h4 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-3 flex items-center gap-2">
+          <span className="text-xl">💳</span> Dados de Pagamento & Bancários
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Banco</label>
+            <input
+              type="text"
+              value={formData.dadosFuncionario.banco || ''}
+              onChange={e => updateDadosFuncionario('banco', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="Ex: Banco do Brasil"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Agência</label>
+            <input
+              type="text"
+              value={formData.dadosFuncionario.agencia || ''}
+              onChange={e => updateDadosFuncionario('agencia', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="Ex: 1234-5"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Conta Bancária</label>
+            <input
+              type="text"
+              value={formData.dadosFuncionario.conta || ''}
+              onChange={e => updateDadosFuncionario('conta', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="Ex: 56789-0"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Conta</label>
+            <select
+              value={formData.dadosFuncionario.tipoConta || 'corrente'}
+              onChange={e => updateDadosFuncionario('tipoConta', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+            >
+              <option value="corrente">Conta Corrente</option>
+              <option value="poupanca">Conta Poupança</option>
+              <option value="salario">Conta Salário</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Chave Pix</label>
+            <select
+              value={formData.dadosFuncionario.tipoChavePix || 'cpf'}
+              onChange={e => updateDadosFuncionario('tipoChavePix', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+            >
+              <option value="cpf">CPF</option>
+              <option value="cnpj">CNPJ</option>
+              <option value="email">E-mail</option>
+              <option value="celular">Celular</option>
+              <option value="aleatoria">Chave Aleatória</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Chave Pix</label>
+            <input
+              type="text"
+              value={formData.dadosFuncionario.chavePix || ''}
+              onChange={e => updateDadosFuncionario('chavePix', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="Ex: pix@csm.edu.br"
+            />
+          </div>
+        </div>
       </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Registro Profissional</label>
-        <input
-          type="text"
-          value={formData.dadosFuncionario.registroProfissional}
-          onChange={e => updateDadosFuncionario('registroProfissional', e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-          placeholder="Ex: CRM, MEC, OAB..."
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Salário Mensal (R$)</label>
-        <input
-          type="number"
-          step="0.01"
-          value={formData.dadosFuncionario.salario}
-          onChange={e => updateDadosFuncionario('salario', e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-          placeholder="Ex: 3500.00"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Carga Horária Semanal (Horas)</label>
-        <input
-          type="number"
-          value={formData.dadosFuncionario.cargaHoraria}
-          onChange={e => updateDadosFuncionario('cargaHoraria', e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-          placeholder="Ex: 40"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Data de Admissão</label>
-        <input
-          type="date"
-          value={formData.dadosFuncionario.dataAdmissao}
-          onChange={e => updateDadosFuncionario('dataAdmissao', e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Data de Demissão (se houver)</label>
-        <input
-          type="date"
-          value={formData.dadosFuncionario.dataDemissao}
-          onChange={e => updateDadosFuncionario('dataDemissao', e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-        />
+
+      {/* 3. Controle de Férias & Observações */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-4">
+        <h4 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-3 flex items-center gap-2">
+          <span className="text-xl">📅</span> Controle de Férias & Observações
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Início das Férias Programadas</label>
+            <input
+              type="date"
+              value={formData.dadosFuncionario.feriasProximasInicio || ''}
+              onChange={e => updateDadosFuncionario('feriasProximasInicio', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Fim das Férias Programadas</label>
+            <input
+              type="date"
+              value={formData.dadosFuncionario.feriasProximasFim || ''}
+              onChange={e => updateDadosFuncionario('feriasProximasFim', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Último Período Aquisitivo de Férias</label>
+            <input
+              type="text"
+              value={formData.dadosFuncionario.feriasUltimoPeriodo || ''}
+              onChange={e => updateDadosFuncionario('feriasUltimoPeriodo', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="Ex: 2024/2025"
+            />
+          </div>
+          <div className="col-span-1 md:col-span-2 lg:col-span-3">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Observações do Departamento Pessoal</label>
+            <textarea
+              value={formData.dadosFuncionario.observacoes || ''}
+              onChange={e => updateDadosFuncionario('observacoes', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none h-24 resize-none"
+              placeholder="Registro livre para observações internas, anotações de ocorrências ou feedback."
+            />
+          </div>
+        </div>
       </div>
     </div>
   )

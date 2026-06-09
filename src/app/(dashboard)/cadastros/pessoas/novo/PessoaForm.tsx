@@ -52,7 +52,17 @@ export function PessoaForm({ disciplinas = [], turmas = [], defaultTipo = 'inter
       dataDemissao: '',
       salario: '',
       cargaHoraria: '',
-      registroProfissional: ''
+      registroProfissional: '',
+      observacoes: '',
+      banco: '',
+      agencia: '',
+      conta: '',
+      tipoConta: 'corrente' as 'corrente' | 'poupanca' | 'salario',
+      chavePix: '',
+      tipoChavePix: 'cpf' as 'cpf' | 'cnpj' | 'email' | 'celular' | 'aleatoria',
+      feriasProximasInicio: '',
+      feriasProximasFim: '',
+      feriasUltimoPeriodo: ''
     }
   })
 
@@ -142,7 +152,17 @@ export function PessoaForm({ disciplinas = [], turmas = [], defaultTipo = 'inter
         dataDemissao: formData.dadosFuncionario.dataDemissao ? new Date(formData.dadosFuncionario.dataDemissao) : undefined,
         salario: formData.dadosFuncionario.salario ? Math.round(parseFloat(formData.dadosFuncionario.salario) * 100) : undefined,
         cargaHoraria: formData.dadosFuncionario.cargaHoraria ? parseInt(formData.dadosFuncionario.cargaHoraria) : undefined,
-        registroProfissional: formData.dadosFuncionario.registroProfissional || undefined
+        registroProfissional: formData.dadosFuncionario.registroProfissional || undefined,
+        observacoes: formData.dadosFuncionario.observacoes || undefined,
+        banco: formData.dadosFuncionario.banco || undefined,
+        agencia: formData.dadosFuncionario.agencia || undefined,
+        conta: formData.dadosFuncionario.conta || undefined,
+        tipoConta: formData.dadosFuncionario.tipoConta || undefined,
+        chavePix: formData.dadosFuncionario.chavePix || undefined,
+        tipoChavePix: formData.dadosFuncionario.tipoChavePix || undefined,
+        feriasProximasInicio: formData.dadosFuncionario.feriasProximasInicio ? new Date(formData.dadosFuncionario.feriasProximasInicio) : undefined,
+        feriasProximasFim: formData.dadosFuncionario.feriasProximasFim ? new Date(formData.dadosFuncionario.feriasProximasFim) : undefined,
+        feriasUltimoPeriodo: formData.dadosFuncionario.feriasUltimoPeriodo || undefined
       } : undefined
     }
 

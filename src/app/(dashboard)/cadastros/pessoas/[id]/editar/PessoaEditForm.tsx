@@ -37,6 +37,16 @@ type PessoaCompleta = {
     cargo?: string | null; departamento?: string | null; dataAdmissao?: Date | null
     dataDemissao?: Date | null; salario?: number | null; cargaHoraria?: number | null
     registroProfissional?: string | null
+    observacoes?: string | null
+    banco?: string | null
+    agencia?: string | null
+    conta?: string | null
+    tipoConta?: string | null
+    chavePix?: string | null
+    tipoChavePix?: string | null
+    feriasProximasInicio?: Date | null
+    feriasProximasFim?: Date | null
+    feriasUltimoPeriodo?: string | null
   } | null
 }
 
@@ -106,6 +116,16 @@ export function PessoaEditForm({
       salario: pessoa.dadosFuncionario?.salario ? String(pessoa.dadosFuncionario.salario / 100) : '',
       cargaHoraria: pessoa.dadosFuncionario?.cargaHoraria ? String(pessoa.dadosFuncionario.cargaHoraria) : '',
       registroProfissional: pessoa.dadosFuncionario?.registroProfissional || '',
+      observacoes: pessoa.dadosFuncionario?.observacoes || '',
+      banco: pessoa.dadosFuncionario?.banco || '',
+      agencia: pessoa.dadosFuncionario?.agencia || '',
+      conta: pessoa.dadosFuncionario?.conta || '',
+      tipoConta: (pessoa.dadosFuncionario?.tipoConta || 'corrente') as 'corrente' | 'poupanca' | 'salario',
+      chavePix: pessoa.dadosFuncionario?.chavePix || '',
+      tipoChavePix: (pessoa.dadosFuncionario?.tipoChavePix || 'cpf') as 'cpf' | 'cnpj' | 'email' | 'celular' | 'aleatoria',
+      feriasProximasInicio: toDateStr(pessoa.dadosFuncionario?.feriasProximasInicio),
+      feriasProximasFim: toDateStr(pessoa.dadosFuncionario?.feriasProximasFim),
+      feriasUltimoPeriodo: pessoa.dadosFuncionario?.feriasUltimoPeriodo || ''
     },
   })
 
@@ -175,6 +195,16 @@ export function PessoaEditForm({
         salario: formData.dadosFuncionario.salario ? Math.round(parseFloat(formData.dadosFuncionario.salario) * 100) : undefined,
         cargaHoraria: formData.dadosFuncionario.cargaHoraria ? parseInt(formData.dadosFuncionario.cargaHoraria) : undefined,
         registroProfissional: formData.dadosFuncionario.registroProfissional || undefined,
+        observacoes: formData.dadosFuncionario.observacoes || undefined,
+        banco: formData.dadosFuncionario.banco || undefined,
+        agencia: formData.dadosFuncionario.agencia || undefined,
+        conta: formData.dadosFuncionario.conta || undefined,
+        tipoConta: formData.dadosFuncionario.tipoConta || undefined,
+        chavePix: formData.dadosFuncionario.chavePix || undefined,
+        tipoChavePix: formData.dadosFuncionario.tipoChavePix || undefined,
+        feriasProximasInicio: formData.dadosFuncionario.feriasProximasInicio ? new Date(formData.dadosFuncionario.feriasProximasInicio) : undefined,
+        feriasProximasFim: formData.dadosFuncionario.feriasProximasFim ? new Date(formData.dadosFuncionario.feriasProximasFim) : undefined,
+        feriasUltimoPeriodo: formData.dadosFuncionario.feriasUltimoPeriodo || undefined
       } : undefined,
     }
 

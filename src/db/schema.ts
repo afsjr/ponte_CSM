@@ -129,6 +129,18 @@ export const dadosFuncionario = pgTable('dados_funcionario', {
   cargaHoraria: integer('carga_horaria'), // em horas semanais/mensais
   registroProfissional: varchar('registro_profissional', { length: 100 }),
   
+  // Novos Campos Contratuais, Bancários, Férias e Observações
+  observacoes: text('observacoes'),
+  banco: varchar('banco', { length: 100 }),
+  agencia: varchar('agencia', { length: 20 }),
+  conta: varchar('conta', { length: 50 }),
+  tipoConta: tipoContaBancariaEnum('tipo_conta'),
+  chavePix: varchar('chave_pix', { length: 150 }),
+  tipoChavePix: tipoChavePixEnum('tipo_chave_pix'),
+  feriasProximasInicio: timestamp('ferias_proximas_inicio', { mode: 'date' }),
+  feriasProximasFim: timestamp('ferias_proximas_fim', { mode: 'date' }),
+  feriasUltimoPeriodo: varchar('ferias_ultimo_periodo', { length: 50 }),
+  
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

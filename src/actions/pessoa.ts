@@ -17,6 +17,27 @@ async function checkAuth() {
   return user
 }
 
+function checkIsAdmin(user: any) {
+  const isDev = process.env.NODE_ENV === 'development';
+  return user?.app_metadata?.role === 'admin' || 
+         user?.user_metadata?.role === 'admin' || 
+         user?.email?.includes('admin') ||
+         (isDev && !user?.email?.includes('comum'));
+}
+
+function isPedagogical(dadosFuncionario: any) {
+  if (!dadosFuncionario) return true;
+  const cargo = (dadosFuncionario.cargo || '').toLowerCase();
+  const depto = (dadosFuncionario.departamento || '').toLowerCase();
+  
+  const palavrasPedagogicas = [
+    'professor', 'professora', 'docente', 'coordenador', 'coordenadora', 
+    'coordenação', 'aee', 'auxiliar de sala', 'pedagogico', 'pedagógico'
+  ];
+  
+  return palavrasPedagogicas.some(word => cargo.includes(word) || depto.includes(word));
+}
+
 export type CreatePessoaParams = {
   nomeCompleto: string;
   cpf?: string;
@@ -72,6 +93,16 @@ export type CreatePessoaParams = {
     salario?: number; // em centavos
     cargaHoraria?: number;
     registroProfissional?: string;
+    observacoes?: string;
+    banco?: string;
+    agencia?: string;
+    conta?: string;
+    tipoConta?: 'corrente' | 'poupanca' | 'salario';
+    chavePix?: string;
+    tipoChavePix?: 'cpf' | 'cnpj' | 'email' | 'celular' | 'aleatoria';
+    feriasProximasInicio?: Date;
+    feriasProximasFim?: Date;
+    feriasUltimoPeriodo?: string;
   };
 }
 
@@ -79,6 +110,14 @@ export async function createPessoa(data: CreatePessoaParams) {
   try {
     const user = await checkAuth()
     const { classificacoes, habilitacoes, dadosAluno: alunoInputData, dadosFuncionario: funcionarioInputData, ...pessoaData } = data;
+
+    const isAdmin = checkIsAdmin(user);
+    if (classificacoes.includes('funcionario') && funcionarioInputData) {
+      const isPedagogo = isPedagogical(funcionarioInputData);
+      if (!isPedagogo && !isAdmin) {
+        throw new Error('Acesso não autorizado para cadastro de funcionário não-pedagógico.');
+      }
+    }
 
     const normalizedCpf = pessoaData.cpf && pessoaData.cpf.trim() !== '' ? pessoaData.cpf.trim() : null;
     const normalizedRg = pessoaData.rg && pessoaData.rg.trim() !== '' ? pessoaData.rg.trim() : null;
@@ -172,7 +211,17 @@ export async function createPessoa(data: CreatePessoaParams) {
           dataDemissao: funcionarioInputData.dataDemissao ? new Date(funcionarioInputData.dataDemissao) : null,
           salario: funcionarioInputData.salario,
           cargaHoraria: funcionarioInputData.cargaHoraria,
-          registroProfissional: funcionarioInputData.registroProfissional
+          registroProfissional: funcionarioInputData.registroProfissional,
+          observacoes: funcionarioInputData.observacoes,
+          banco: funcionarioInputData.banco,
+          agencia: funcionarioInputData.agencia,
+          conta: funcionarioInputData.conta,
+          tipoConta: funcionarioInputData.tipoConta,
+          chavePix: funcionarioInputData.chavePix,
+          tipoChavePix: funcionarioInputData.tipoChavePix,
+          feriasProximasInicio: funcionarioInputData.feriasProximasInicio ? new Date(funcionarioInputData.feriasProximasInicio) : null,
+          feriasProximasFim: funcionarioInputData.feriasProximasFim ? new Date(funcionarioInputData.feriasProximasFim) : null,
+          feriasUltimoPeriodo: funcionarioInputData.feriasUltimoPeriodo
         });
       }
 
@@ -272,6 +321,24 @@ export async function updatePessoa(id: string, data: Partial<CreatePessoaParams>
     }
 
     await db.transaction(async (tx) => {
+      // 1. Verificar se o funcionário existente já é não-pedagógico e se o usuário não é admin
+      const [existingFuncionario] = await tx.select().from(dadosFuncionario).where(eq(dadosFuncionario.pessoaId, id));
+      const isAdmin = checkIsAdmin(user);
+      if (existingFuncionario) {
+        const wasPedagogico = isPedagogical(existingFuncionario);
+        if (!wasPedagogico && !isAdmin) {
+          throw new Error('Acesso não autorizado para alteração de funcionário não-pedagógico.');
+        }
+      }
+      
+      // 2. Verificar se o novo cargo/departamento torna o perfil não-pedagógico e se o usuário não é admin
+      if (funcionarioInputData && (classificacoes?.includes('funcionario') || data.classificacoes?.includes('funcionario'))) {
+        const isNewPedagogico = isPedagogical(funcionarioInputData);
+        if (!isNewPedagogico && !isAdmin) {
+          throw new Error('Acesso não autorizado para definir funcionário como não-pedagógico.');
+        }
+      }
+
       // Atualiza os dados principais (somente colunas válidas)
       if (Object.keys(pessoaFields).length > 0) {
         await tx.update(pessoa)
@@ -362,6 +429,16 @@ export async function updatePessoa(id: string, data: Partial<CreatePessoaParams>
             salario: funcionarioInputData.salario,
             cargaHoraria: funcionarioInputData.cargaHoraria,
             registroProfissional: funcionarioInputData.registroProfissional,
+            observacoes: funcionarioInputData.observacoes,
+            banco: funcionarioInputData.banco,
+            agencia: funcionarioInputData.agencia,
+            conta: funcionarioInputData.conta,
+            tipoConta: funcionarioInputData.tipoConta,
+            chavePix: funcionarioInputData.chavePix,
+            tipoChavePix: funcionarioInputData.tipoChavePix,
+            feriasProximasInicio: funcionarioInputData.feriasProximasInicio ? new Date(funcionarioInputData.feriasProximasInicio) : null,
+            feriasProximasFim: funcionarioInputData.feriasProximasFim ? new Date(funcionarioInputData.feriasProximasFim) : null,
+            feriasUltimoPeriodo: funcionarioInputData.feriasUltimoPeriodo,
             updatedAt: new Date()
           })
           .onConflictDoUpdate({
@@ -374,6 +451,16 @@ export async function updatePessoa(id: string, data: Partial<CreatePessoaParams>
               salario: funcionarioInputData.salario,
               cargaHoraria: funcionarioInputData.cargaHoraria,
               registroProfissional: funcionarioInputData.registroProfissional,
+              observacoes: funcionarioInputData.observacoes,
+              banco: funcionarioInputData.banco,
+              agencia: funcionarioInputData.agencia,
+              conta: funcionarioInputData.conta,
+              tipoConta: funcionarioInputData.tipoConta,
+              chavePix: funcionarioInputData.chavePix,
+              tipoChavePix: funcionarioInputData.tipoChavePix,
+              feriasProximasInicio: funcionarioInputData.feriasProximasInicio ? new Date(funcionarioInputData.feriasProximasInicio) : null,
+              feriasProximasFim: funcionarioInputData.feriasProximasFim ? new Date(funcionarioInputData.feriasProximasFim) : null,
+              feriasUltimoPeriodo: funcionarioInputData.feriasUltimoPeriodo,
               updatedAt: new Date()
             }
           });

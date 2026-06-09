@@ -14,12 +14,13 @@ vi.mock('@/db', () => ({
 }))
 
 // Mock do Supabase Auth Server Client
+const mockGetUser = vi.fn().mockResolvedValue({
+  data: { user: { id: 'mock-user-uuid', email: 'admin@csm.edu.br' } }
+})
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn().mockResolvedValue({
     auth: {
-      getUser: vi.fn().mockResolvedValue({
-        data: { user: { id: 'mock-user-uuid' } }
-      })
+      getUser: () => mockGetUser()
     }
   })
 }))
@@ -27,6 +28,9 @@ vi.mock('@/lib/supabase/server', () => ({
 describe('Pessoa Server Actions', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: 'mock-user-uuid', email: 'admin@csm.edu.br' } }
+    })
   })
 
   it('deve criar uma pessoa com classificacoes e retornar o ID', async () => {
@@ -173,5 +177,82 @@ describe('Pessoa Server Actions', () => {
 
     expect(result.success).toBe(true)
     expect(result.data).toEqual(mockPessoaCompleta)
+  })
+
+  it('deve bloquear a criacao de funcionario nao-pedagogico por um usuario nao-admin', async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: 'mock-user-uuid', email: 'comum@csm.edu.br' } }
+    })
+
+    const payload = {
+      nomeCompleto: 'Funcionario Comum',
+      classificacoes: ['funcionario'] as any,
+      dadosFuncionario: {
+        cargo: 'Portaria', 
+        departamento: 'Segurança',
+      }
+    }
+
+    const result = await createPessoa(payload)
+
+    expect(result.success).toBe(false)
+    expect(result.error).toContain('Acesso não autorizado')
+  })
+
+  it('deve permitir a criacao de funcionario nao-pedagogico por um usuario admin', async () => {
+    vi.mocked(db.transaction).mockImplementation(async (callback) => {
+      return 'mock-uuid-func-admin'
+    })
+
+    const payload = {
+      nomeCompleto: 'Funcionario Admin',
+      classificacoes: ['funcionario'] as any,
+      dadosFuncionario: {
+        cargo: 'Portaria', 
+        departamento: 'Segurança',
+      }
+    }
+
+    const result = await createPessoa(payload)
+
+    expect(result.success).toBe(true)
+    expect(result.id).toBe('mock-uuid-func-admin')
+  })
+
+  it('deve bloquear a atualizacao de funcionario nao-pedagogico por um usuario nao-admin', async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: 'mock-user-uuid', email: 'comum@csm.edu.br' } }
+    })
+
+    vi.mocked(db.transaction).mockImplementation(async (callback) => {
+      const mockTx = {
+        select: vi.fn().mockReturnValue({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([
+              {
+                pessoaId: 'mock-uuid-123',
+                cargo: 'Portaria', 
+                departamento: 'Segurança',
+              }
+            ])
+          })
+        })
+      }
+      return await callback(mockTx as any)
+    })
+
+    const payload = {
+      nomeCompleto: 'Funcionario Editado',
+      classificacoes: ['funcionario'] as any,
+      dadosFuncionario: {
+        cargo: 'Portaria',
+        departamento: 'Segurança',
+      }
+    }
+
+    const result = await updatePessoa('mock-uuid-123', payload)
+
+    expect(result.success).toBe(false)
+    expect(result.error).toContain('Acesso não autorizado')
   })
 })
