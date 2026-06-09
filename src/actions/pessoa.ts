@@ -80,6 +80,9 @@ export async function createPessoa(data: CreatePessoaParams) {
     const user = await checkAuth()
     const { classificacoes, habilitacoes, dadosAluno: alunoInputData, dadosFuncionario: funcionarioInputData, ...pessoaData } = data;
 
+    const normalizedCpf = pessoaData.cpf && pessoaData.cpf.trim() !== '' ? pessoaData.cpf.trim() : null;
+    const normalizedRg = pessoaData.rg && pessoaData.rg.trim() !== '' ? pessoaData.rg.trim() : null;
+
     // Transação para garantir consistência
     const novaPessoaId = await db.transaction(async (tx) => {
       // 1. Criar Pessoa
@@ -87,6 +90,8 @@ export async function createPessoa(data: CreatePessoaParams) {
         .insert(pessoa)
         .values({
           ...pessoaData,
+          cpf: normalizedCpf,
+          rg: normalizedRg,
           dataNascimento: data.dataNascimento ? new Date(data.dataNascimento) : null,
           dataExpedicaoRg: data.dataExpedicaoRg ? new Date(data.dataExpedicaoRg) : null
         })
@@ -258,7 +263,11 @@ export async function updatePessoa(id: string, data: Partial<CreatePessoaParams>
     const validPessoaKeys = ['nomeCompleto', 'cpf', 'rg', 'orgaoExpedidorRg', 'dataExpedicaoRg', 'dataNascimento', 'cidadeNatal', 'nacionalidade', 'estrangeiro', 'genero', 'estadoCivil', 'situacao', 'necessidadeEspecial']
     for (const key of validPessoaKeys) {
       if (key in restData) {
-        pessoaFields[key] = (restData as any)[key]
+        let val = (restData as any)[key]
+        if ((key === 'cpf' || key === 'rg') && typeof val === 'string') {
+          val = val.trim() !== '' ? val.trim() : null
+        }
+        pessoaFields[key] = val
       }
     }
 
