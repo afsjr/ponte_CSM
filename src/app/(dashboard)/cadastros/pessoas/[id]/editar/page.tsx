@@ -30,10 +30,13 @@ export default async function EditarPessoaPage({
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   const isDev = process.env.NODE_ENV === 'development'
-  const isAdmin = user?.app_metadata?.role === 'admin' || 
-                  user?.user_metadata?.role === 'admin' || 
-                  user?.email?.includes('admin') ||
-                  (isDev && !user?.email?.includes('comum'))
+  const role = user?.app_metadata?.role || user?.user_metadata?.role
+  const email = user?.email || ''
+  const isAdmin = role === 'admin' || 
+                  role === 'master' || 
+                  email.includes('admin') ||
+                  email.includes('master') ||
+                  (isDev && !email.includes('comum'))
 
   const [pessoaRes, disciplinasRes, turmasRes] = await Promise.all([
     getPessoaById(id),

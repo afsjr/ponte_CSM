@@ -255,4 +255,28 @@ describe('Pessoa Server Actions', () => {
     expect(result.success).toBe(false)
     expect(result.error).toContain('Acesso não autorizado')
   })
+
+  it('deve permitir a criacao de funcionario nao-pedagogico por um usuario com email master', async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: 'mock-user-uuid', email: 'master@csm.edu.br' } }
+    })
+
+    vi.mocked(db.transaction).mockImplementation(async (callback) => {
+      return 'mock-uuid-func-master'
+    })
+
+    const payload = {
+      nomeCompleto: 'Funcionario Master',
+      classificacoes: ['funcionario'] as any,
+      dadosFuncionario: {
+        cargo: 'Secretária', 
+        departamento: 'Secretaria',
+      }
+    }
+
+    const result = await createPessoa(payload)
+
+    expect(result.success).toBe(true)
+    expect(result.id).toBe('mock-uuid-func-master')
+  })
 })

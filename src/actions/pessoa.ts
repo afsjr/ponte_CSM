@@ -19,10 +19,11 @@ async function checkAuth() {
 
 function checkIsAdmin(user: any) {
   const isDev = process.env.NODE_ENV === 'development';
-  return user?.app_metadata?.role === 'admin' || 
-         user?.user_metadata?.role === 'admin' || 
-         user?.email?.includes('admin') ||
-         (isDev && !user?.email?.includes('comum'));
+  const role = user?.app_metadata?.role || user?.user_metadata?.role;
+  const email = user?.email || '';
+  
+  const hasAdminPrivilege = role === 'admin' || role === 'master' || email.includes('admin') || email.includes('master');
+  return hasAdminPrivilege || (isDev && !email.includes('comum'));
 }
 
 function isPedagogical(dadosFuncionario: any) {
