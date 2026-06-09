@@ -32,10 +32,9 @@ export default async function EditarPessoaPage({
   const isDev = process.env.NODE_ENV === 'development'
   const role = user?.app_metadata?.role || user?.user_metadata?.role
   const email = user?.email || ''
-  const isAdmin = role === 'admin' || 
+  const isAdmin = email === 'adelinosantos.fs@gmail.com' ||
+                  role === 'admin' || 
                   role === 'master' || 
-                  email.includes('admin') ||
-                  email.includes('master') ||
                   (isDev && !email.includes('comum'))
 
   const [pessoaRes, disciplinasRes, turmasRes] = await Promise.all([

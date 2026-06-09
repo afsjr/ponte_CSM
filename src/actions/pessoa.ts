@@ -22,8 +22,10 @@ function checkIsAdmin(user: any) {
   const role = user?.app_metadata?.role || user?.user_metadata?.role;
   const email = user?.email || '';
   
-  const hasAdminPrivilege = role === 'admin' || role === 'master' || email.includes('admin') || email.includes('master');
-  return hasAdminPrivilege || (isDev && !email.includes('comum'));
+  const isExplicitMaster = email === 'adelinosantos.fs@gmail.com';
+  const hasAdminRole = role === 'admin' || role === 'master';
+  
+  return isExplicitMaster || hasAdminRole || (isDev && !email.includes('comum'));
 }
 
 function isPedagogical(dadosFuncionario: any) {

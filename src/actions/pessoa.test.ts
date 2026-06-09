@@ -15,7 +15,7 @@ vi.mock('@/db', () => ({
 
 // Mock do Supabase Auth Server Client
 const mockGetUser = vi.fn().mockResolvedValue({
-  data: { user: { id: 'mock-user-uuid', email: 'admin@csm.edu.br' } }
+  data: { user: { id: 'mock-user-uuid', email: 'admin@csm.edu.br', app_metadata: { role: 'admin' } } }
 })
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn().mockResolvedValue({
@@ -29,7 +29,7 @@ describe('Pessoa Server Actions', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockGetUser.mockResolvedValue({
-      data: { user: { id: 'mock-user-uuid', email: 'admin@csm.edu.br' } }
+      data: { user: { id: 'mock-user-uuid', email: 'admin@csm.edu.br', app_metadata: { role: 'admin' } } }
     })
   })
 
@@ -256,9 +256,9 @@ describe('Pessoa Server Actions', () => {
     expect(result.error).toContain('Acesso não autorizado')
   })
 
-  it('deve permitir a criacao de funcionario nao-pedagogico por um usuario com email master', async () => {
+  it('deve permitir a criacao de funcionario nao-pedagogico por um usuario com email master explicito', async () => {
     mockGetUser.mockResolvedValue({
-      data: { user: { id: 'mock-user-uuid', email: 'master@csm.edu.br' } }
+      data: { user: { id: 'mock-user-uuid', email: 'adelinosantos.fs@gmail.com' } }
     })
 
     vi.mocked(db.transaction).mockImplementation(async (callback) => {
