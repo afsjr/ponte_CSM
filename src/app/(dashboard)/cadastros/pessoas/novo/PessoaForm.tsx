@@ -96,6 +96,12 @@ export function PessoaForm({ disciplinas = [], turmas = [], defaultTipo = 'inter
     })
   }
 
+  const safeDate = (dateStr: string) => {
+    if (!dateStr || dateStr.trim() === '') return undefined;
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? undefined : d;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -103,7 +109,13 @@ export function PessoaForm({ disciplinas = [], turmas = [], defaultTipo = 'inter
 
     if (formData.classificacoes.includes('aluno')) {
       if (formData.dataNascimento) {
-        const birthDate = new Date(formData.dataNascimento);
+        const birthDate = safeDate(formData.dataNascimento);
+        if (!birthDate) {
+          setError('Data de nascimento inválida para o aluno.');
+          setIsSubmitting(false);
+          setActiveTab('dados_pessoais');
+          return;
+        }
         const ageDifMs = Date.now() - birthDate.getTime();
         const ageDate = new Date(ageDifMs);
         const age = Math.abs(ageDate.getUTCFullYear() - 1970);
@@ -124,7 +136,7 @@ export function PessoaForm({ disciplinas = [], turmas = [], defaultTipo = 'inter
 
     const payload = {
       ...formData,
-      dataNascimento: formData.dataNascimento ? new Date(formData.dataNascimento) : undefined,
+      dataNascimento: safeDate(formData.dataNascimento),
       genero: formData.genero as 'masculino' | 'feminino' | 'outro' | 'nao_informado',
       estadoCivil: formData.estadoCivil as 'solteiro' | 'casado' | 'divorciado' | 'viuvo' | 'uniao_estavel' | 'separado',
       situacao: formData.situacao as 'ativo' | 'inativo' | 'suspenso' | 'transferido' | 'formado' | 'desistente',
@@ -148,8 +160,8 @@ export function PessoaForm({ disciplinas = [], turmas = [], defaultTipo = 'inter
       dadosFuncionario: formData.classificacoes.includes('funcionario') ? {
         cargo: formData.dadosFuncionario.cargo || undefined,
         departamento: formData.dadosFuncionario.departamento || undefined,
-        dataAdmissao: formData.dadosFuncionario.dataAdmissao ? new Date(formData.dadosFuncionario.dataAdmissao) : undefined,
-        dataDemissao: formData.dadosFuncionario.dataDemissao ? new Date(formData.dadosFuncionario.dataDemissao) : undefined,
+        dataAdmissao: safeDate(formData.dadosFuncionario.dataAdmissao),
+        dataDemissao: safeDate(formData.dadosFuncionario.dataDemissao),
         salario: formData.dadosFuncionario.salario ? Math.round(parseFloat(formData.dadosFuncionario.salario) * 100) : undefined,
         cargaHoraria: formData.dadosFuncionario.cargaHoraria ? parseInt(formData.dadosFuncionario.cargaHoraria) : undefined,
         registroProfissional: formData.dadosFuncionario.registroProfissional || undefined,
@@ -160,19 +172,25 @@ export function PessoaForm({ disciplinas = [], turmas = [], defaultTipo = 'inter
         tipoConta: formData.dadosFuncionario.tipoConta || undefined,
         chavePix: formData.dadosFuncionario.chavePix || undefined,
         tipoChavePix: formData.dadosFuncionario.tipoChavePix || undefined,
-        feriasProximasInicio: formData.dadosFuncionario.feriasProximasInicio ? new Date(formData.dadosFuncionario.feriasProximasInicio) : undefined,
-        feriasProximasFim: formData.dadosFuncionario.feriasProximasFim ? new Date(formData.dadosFuncionario.feriasProximasFim) : undefined,
+        feriasProximasInicio: safeDate(formData.dadosFuncionario.feriasProximasInicio),
+        feriasProximasFim: safeDate(formData.dadosFuncionario.feriasProximasFim),
         feriasUltimoPeriodo: formData.dadosFuncionario.feriasUltimoPeriodo || undefined
       } : undefined
     }
 
-    const result = await createPessoa(payload)
+    try {
+      const result = await createPessoa(payload)
 
-    if (result.success) {
-      router.push('/cadastros/pessoas')
-      router.refresh()
-    } else {
-      setError(result.error || 'Erro desconhecido ao salvar.')
+      if (result.success) {
+        router.push('/cadastros/pessoas')
+        router.refresh()
+      } else {
+        setError(result.error || 'Erro desconhecido ao salvar.')
+        setIsSubmitting(false)
+      }
+    } catch (err: any) {
+      console.error('Erro ao salvar:', err)
+      setError(err.message || 'Ocorreu um erro ao salvar os dados. Por favor, tente novamente.')
       setIsSubmitting(false)
     }
   }
