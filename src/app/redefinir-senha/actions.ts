@@ -21,7 +21,7 @@ export async function sendResetLink(formData: FormData) {
 
   if (error) {
     console.error('ERRO SUPABASE AUTH:', error);
-    redirect('/redefinir-senha?error=Não foi possível enviar o e-mail. Verifique se o endereço está correto.')
+    redirect(`/redefinir-senha?error=${encodeURIComponent(error.message)}`)
   }
 
   redirect('/redefinir-senha?success=true')
