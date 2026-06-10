@@ -19,7 +19,7 @@ export default async function DashboardLayout({
     const permissions = await getUserPermissions(user.id, user.email);
 
     // O admin master pode ignorar a restrição de situação para conseguir desbloquear os outros
-    const isDevMaster = user.email === 'adelinosantos.fs@gmail.com' || (process.env.NODE_ENV === 'development' && !user.email?.includes('comum'));
+    const isDevMaster = user.email?.toLowerCase() === 'adelinosantos.fs@gmail.com' || (process.env.NODE_ENV === 'development' && !user.email?.includes('comum'));
 
     if (!isDevMaster) {
       const [p] = await db.select({ situacao: pessoa.situacao }).from(pessoa).where(eq(pessoa.id, user.id));

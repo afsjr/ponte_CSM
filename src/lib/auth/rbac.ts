@@ -33,7 +33,7 @@ export async function getUserPermissions(userId: string, email?: string): Promis
   const tipos = classificacoes.map(c => c.tipo);
   
   // Verifica explicitamente e-mails hardcoded para super admin de desenvolvimento
-  const isDevMaster = email === 'adelinosantos.fs@gmail.com' || (process.env.NODE_ENV === 'development' && !email?.includes('comum'));
+  const isDevMaster = email?.toLowerCase() === 'adelinosantos.fs@gmail.com' || (process.env.NODE_ENV === 'development' && !email?.includes('comum'));
 
   const isFuncionario = tipos.includes('funcionario') || isDevMaster;
 

@@ -30,15 +30,24 @@ export default function AcessoBloqueadoPage() {
           <p className="mt-4 text-xs">Em caso de dúvidas, por favor, entre em contato com a Secretaria.</p>
         </div>
         
-        <form>
-          <button
-            formAction={logout}
-            className="w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+        <div className="flex flex-col gap-3">
+          <form>
+            <button
+              formAction={logout}
+              className="w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              <LucideLogOut size={18} />
+              Sair da Conta
+            </button>
+          </form>
+
+          <a 
+            href="/"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center"
           >
-            <LucideLogOut size={18} />
-            Sair da Conta
-          </button>
-        </form>
+            Tentar Novamente
+          </a>
+        </div>
       </div>
     </div>
   )
