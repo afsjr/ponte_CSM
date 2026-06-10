@@ -31,10 +31,14 @@ export async function getUserPermissions(userId: string, email?: string): Promis
     .where(eq(pessoaClassificacao.pessoaId, userId));
 
   const tipos = classificacoes.map(c => c.tipo);
-  const isFuncionario = tipos.includes('funcionario');
+  
+  // Verifica explicitamente e-mails hardcoded para super admin de desenvolvimento
+  const isDevMaster = email === 'adelinosantos.fs@gmail.com' || (process.env.NODE_ENV === 'development' && !email?.includes('comum'));
+
+  const isFuncionario = tipos.includes('funcionario') || isDevMaster;
 
   if (!isFuncionario) {
-    return DEFAULT_PERMISSIONS; // Se não for funcionário, não tem acesso aos painéis internos
+    return DEFAULT_PERMISSIONS; // Se não for funcionário e não for admin, não tem acesso aos painéis internos
   }
 
   // Busca dados de funcionário (cargo, departamento)
@@ -47,9 +51,6 @@ export async function getUserPermissions(userId: string, email?: string): Promis
 
   const cargo = (funcData?.cargo || '').toLowerCase();
   const departamento = (funcData?.departamento || '').toLowerCase();
-
-  // Verifica explicitamente e-mails hardcoded para super admin de desenvolvimento
-  const isDevMaster = email === 'adelinosantos.fs@gmail.com' || (process.env.NODE_ENV === 'development' && !email?.includes('comum'));
 
   const isAdmin = isDevMaster || 
                   departamento.includes('direção') || 

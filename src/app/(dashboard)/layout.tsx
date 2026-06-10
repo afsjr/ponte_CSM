@@ -16,19 +16,25 @@ export default async function DashboardLayout({
   const { data: { user } } = await supabase.auth.getUser()
   
   if (user) {
-    const [p] = await db.select({ situacao: pessoa.situacao }).from(pessoa).where(eq(pessoa.id, user.id));
-    if (p) {
-      if (p.situacao === 'inativo') {
-        redirect('/em-analise')
-      } else if (p.situacao !== 'ativo') {
+    const permissions = await getUserPermissions(user.id, user.email);
+
+    // O admin master pode ignorar a restrição de situação para conseguir desbloquear os outros
+    const isDevMaster = user.email === 'adelinosantos.fs@gmail.com' || (process.env.NODE_ENV === 'development' && !user.email?.includes('comum'));
+
+    if (!isDevMaster) {
+      const [p] = await db.select({ situacao: pessoa.situacao }).from(pessoa).where(eq(pessoa.id, user.id));
+      if (p) {
+        if (p.situacao === 'inativo') {
+          redirect('/em-analise')
+        } else if (p.situacao !== 'ativo') {
+          redirect('/acesso-bloqueado')
+        }
+      }
+
+      if (!permissions.isFuncionario) {
+        // Futuramente aqui pode redirecionar para /portal-aluno, etc.
         redirect('/acesso-bloqueado')
       }
-    }
-
-    const permissions = await getUserPermissions(user.id, user.email);
-    if (!permissions.isFuncionario) {
-      // Futuramente aqui pode redirecionar para /portal-aluno, etc.
-      redirect('/acesso-bloqueado')
     }
   }
 
