@@ -5,6 +5,7 @@ import { pessoa, pessoaClassificacao, endereco, contato, anexo, funcionarioHabil
 import { eq, like, or, ilike, desc, count, and } from 'drizzle-orm'
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { getUserPermissions } from '@/lib/auth/rbac'
 
 async function checkAuth() {
   const supabase = await createClient()
@@ -18,29 +19,7 @@ async function checkAuth() {
   return user
 }
 
-function checkIsAdmin(user: any) {
-  const isDev = process.env.NODE_ENV === 'development';
-  const role = user?.app_metadata?.role || user?.user_metadata?.role;
-  const email = user?.email || '';
-  
-  const isExplicitMaster = email === 'adelinosantos.fs@gmail.com';
-  const hasAdminRole = role === 'admin' || role === 'master';
-  
-  return isExplicitMaster || hasAdminRole || (isDev && !email.includes('comum'));
-}
-
-function isPedagogical(dadosFuncionario: any) {
-  if (!dadosFuncionario) return true;
-  const cargo = (dadosFuncionario.cargo || '').toLowerCase();
-  const depto = (dadosFuncionario.departamento || '').toLowerCase();
-  
-  const palavrasPedagogicas = [
-    'professor', 'professora', 'docente', 'coordenador', 'coordenadora', 
-    'coordenação', 'aee', 'auxiliar de sala', 'pedagogico', 'pedagógico'
-  ];
-  
-  return palavrasPedagogicas.some(word => cargo.includes(word) || depto.includes(word));
-}
+// Removidas funções legadas checkIsAdmin e isPedagogical, agora usando getUserPermissions
 
 export type CreatePessoaParams = {
   nomeCompleto: string;
@@ -115,12 +94,15 @@ export async function createPessoa(data: CreatePessoaParams) {
     const user = await checkAuth()
     const { classificacoes, habilitacoes, dadosAluno: alunoInputData, dadosFuncionario: funcionarioInputData, contatos: contatosInput, endereco: enderecoInput, ...pessoaData } = data;
 
-    const isAdmin = checkIsAdmin(user);
-    if (classificacoes.includes('funcionario') && funcionarioInputData) {
-      const isPedagogo = isPedagogical(funcionarioInputData);
-      if (!isPedagogo && !isAdmin) {
-        throw new Error('Acesso não autorizado para cadastro de funcionário não-pedagógico.');
-      }
+    const permissions = await getUserPermissions(user.id, user.email);
+    
+    // Apenas quem tem acesso de Secretaria ou superior pode criar pessoas que não sejam alunos simples
+    if (!permissions.canAccessCadastros) {
+      throw new Error('Acesso não autorizado para cadastro de pessoas no painel interno.');
+    }
+
+    if (classificacoes.includes('funcionario') && !permissions.isAdmin) {
+      throw new Error('Acesso não autorizado para criar novos funcionários. Contate o administrador.');
     }
 
     const normalizedCpf = pessoaData.cpf && pessoaData.cpf.trim() !== '' ? pessoaData.cpf.trim() : null;
@@ -325,23 +307,18 @@ export async function updatePessoa(id: string, data: Partial<CreatePessoaParams>
       }
     }
 
+    const permissions = await getUserPermissions(user.id, user.email);
+
+    if (!permissions.canAccessCadastros) {
+      throw new Error('Acesso não autorizado para edição de pessoas.');
+    }
+
     await db.transaction(async (tx) => {
-      // 1. Verificar se o funcionário existente já é não-pedagógico e se o usuário não é admin
+      // 1. Verificar permissões para editar funcionários
       const [existingFuncionario] = await tx.select().from(dadosFuncionario).where(eq(dadosFuncionario.pessoaId, id));
-      const isAdmin = checkIsAdmin(user);
-      if (existingFuncionario) {
-        const wasPedagogico = isPedagogical(existingFuncionario);
-        if (!wasPedagogico && !isAdmin) {
-          throw new Error('Acesso não autorizado para alteração de funcionário não-pedagógico.');
-        }
-      }
       
-      // 2. Verificar se o novo cargo/departamento torna o perfil não-pedagógico e se o usuário não é admin
-      if (funcionarioInputData && (classificacoes?.includes('funcionario') || data.classificacoes?.includes('funcionario'))) {
-        const isNewPedagogico = isPedagogical(funcionarioInputData);
-        if (!isNewPedagogico && !isAdmin) {
-          throw new Error('Acesso não autorizado para definir funcionário como não-pedagógico.');
-        }
+      if ((existingFuncionario || (classificacoes?.includes('funcionario') || data.classificacoes?.includes('funcionario'))) && !permissions.isAdmin) {
+         throw new Error('Acesso não autorizado para alterar dados de funcionários. Contate o administrador.');
       }
 
       // Atualiza os dados principais (somente colunas válidas)

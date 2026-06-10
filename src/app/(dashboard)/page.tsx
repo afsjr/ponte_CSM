@@ -1,24 +1,27 @@
 import { LucideUsers, LucideGraduationCap, LucideFileText, LucideSettings, LucideUserCheck, LucideBookOpen } from 'lucide-react'
 import Link from 'next/link'
 import { db } from '@/db'
-import { pessoaClassificacao, turma, matricula } from '@/db/schema'
+import { pessoaClassificacao, turma, matricula, pessoa } from '@/db/schema'
 import { eq, sql, or } from 'drizzle-orm'
+import { AlertCircle, UserPlus } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
 export default async function DashboardHome() {
   // Executar queries em paralelo para performance
-  const [totalAlunosRes, totalFuncionariosRes, turmasAtivasRes, matriculasAtivasRes] = await Promise.all([
+  const [totalAlunosRes, totalFuncionariosRes, turmasAtivasRes, matriculasAtivasRes, pendentesRes] = await Promise.all([
     db.select({ count: sql<number>`count(*)` }).from(pessoaClassificacao).where(eq(pessoaClassificacao.tipo, 'aluno')),
     db.select({ count: sql<number>`count(*)` }).from(pessoaClassificacao).where(eq(pessoaClassificacao.tipo, 'funcionario')),
     db.select({ count: sql<number>`count(*)` }).from(turma).where(or(eq(turma.situacao, 'aberta'), eq(turma.situacao, 'em_andamento'))),
-    db.select({ count: sql<number>`count(*)` }).from(matricula).where(eq(matricula.status, 'ativo'))
+    db.select({ count: sql<number>`count(*)` }).from(matricula).where(eq(matricula.status, 'ativo')),
+    db.select({ count: sql<number>`count(*)` }).from(pessoa).where(eq(pessoa.situacao, 'inativo'))
   ]);
 
   const totalAlunos = Number(totalAlunosRes[0]?.count || 0)
   const totalFuncionarios = Number(totalFuncionariosRes[0]?.count || 0)
   const turmasAtivas = Number(turmasAtivasRes[0]?.count || 0)
   const matriculasAtivas = Number(matriculasAtivasRes[0]?.count || 0)
+  const pendentesAprovacao = Number(pendentesRes[0]?.count || 0)
 
   return (
     <div className="flex flex-col gap-6">
@@ -29,6 +32,29 @@ export default async function DashboardHome() {
           Selecione um dos módulos abaixo para iniciar suas atividades ou verifique o panorama atual da escola.
         </p>
       </div>
+
+      {pendentesAprovacao > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 shadow-sm flex items-start gap-4">
+          <div className="bg-amber-100 text-amber-600 p-2 rounded-lg mt-1">
+            <AlertCircle size={20} />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-amber-800 font-semibold mb-1">Atenção: Cadastros Pendentes</h3>
+            <p className="text-amber-700 text-sm">
+              Você possui <strong>{pendentesAprovacao} interessado(s)</strong> que criaram conta recentemente e estão aguardando aprovação para acessar o sistema.
+            </p>
+          </div>
+          <div>
+            <Link 
+              href="/cadastros/pessoas" 
+              className="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              <UserPlus size={16} />
+              Revisar Cadastros
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

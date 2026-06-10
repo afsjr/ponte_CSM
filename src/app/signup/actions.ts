@@ -5,8 +5,18 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { db } from '@/db'
 import { pessoa, pessoaClassificacao, contato } from '@/db/schema'
+import { headers } from 'next/headers'
+import { rateLimit } from '@/lib/rateLimit'
 
 export async function signup(formData: FormData) {
+  const headersList = await headers()
+  const ip = headersList.get('x-forwarded-for') ?? '127.0.0.1'
+  
+  // Limita a 3 criações de conta por IP a cada 1 hora (60 min * 60 seg * 1000 ms)
+  if (!rateLimit(ip + '_signup', 3, 60 * 60 * 1000)) {
+    redirect('/signup?error=Muitas contas criadas. Tente novamente mais tarde.')
+  }
+
   const supabase = await createClient()
 
   const email = formData.get('email') as string

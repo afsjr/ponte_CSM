@@ -7,8 +7,15 @@ import {
   LucideSettings,
   LucideBrain
 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
+import { getUserPermissions } from '@/lib/auth/rbac'
 
-export function Sidebar() {
+export async function Sidebar() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  const permissions = await getUserPermissions(user?.id || '', user?.email);
+
   return (
     <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col h-full shadow-xl border-r-4 border-[var(--color-csm-red)]">
       <div className="h-16 flex items-center px-6 bg-slate-950 font-bold text-white text-lg tracking-wide border-b border-slate-800">
@@ -27,37 +34,56 @@ export function Sidebar() {
             <span className="font-medium">Painel Inicial</span>
           </Link>
           
-          <div className="mt-4 mb-1 text-xs font-semibold text-slate-500 uppercase px-3">
-            Administração
-          </div>
-          <Link href="/cadastros/pessoas" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-[var(--color-csm-yellow)] transition-colors">
-            <LucideUsers size={18} />
-            <span className="font-medium">Cadastros</span>
-          </Link>
-          <Link href="/pedagogico" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-[var(--color-csm-yellow)] transition-colors">
-            <LucideGraduationCap size={18} />
-            <span className="font-medium">Pedagógico</span>
-          </Link>
-          <Link href="/secretaria" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-[var(--color-csm-yellow)] transition-colors">
-            <LucideFileText size={18} />
-            <span className="font-medium">Secretaria</span>
-          </Link>
+          {(permissions.canAccessCadastros || permissions.canAccessSecretaria || permissions.canAccessPedagogico) && (
+            <div className="mt-4 mb-1 text-xs font-semibold text-slate-500 uppercase px-3">
+              Administração
+            </div>
+          )}
           
-          <div className="mt-4 mb-1 text-xs font-semibold text-slate-500 uppercase px-3">
-            Inclusão e Acessibilidade
-          </div>
-          <Link href="/aee" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-[var(--color-csm-green)] transition-colors">
-            <LucideBrain size={18} />
-            <span className="font-medium">AEE</span>
-          </Link>
+          {permissions.canAccessCadastros && (
+            <Link href="/cadastros/pessoas" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-[var(--color-csm-yellow)] transition-colors">
+              <LucideUsers size={18} />
+              <span className="font-medium">Cadastros</span>
+            </Link>
+          )}
           
-          <div className="mt-4 mb-1 text-xs font-semibold text-slate-500 uppercase px-3">
-            Sistema
-          </div>
-          <Link href="/configuracoes" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
-            <LucideSettings size={18} />
-            <span className="font-medium">Configurações</span>
-          </Link>
+          {permissions.canAccessPedagogico && (
+            <Link href="/pedagogico" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-[var(--color-csm-yellow)] transition-colors">
+              <LucideGraduationCap size={18} />
+              <span className="font-medium">Pedagógico</span>
+            </Link>
+          )}
+          
+          {permissions.canAccessSecretaria && (
+            <Link href="/secretaria" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-[var(--color-csm-yellow)] transition-colors">
+              <LucideFileText size={18} />
+              <span className="font-medium">Secretaria</span>
+            </Link>
+          )}
+          
+          {permissions.canAccessAee && (
+            <>
+              <div className="mt-4 mb-1 text-xs font-semibold text-slate-500 uppercase px-3">
+                Inclusão e Acessibilidade
+              </div>
+              <Link href="/aee" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-[var(--color-csm-green)] transition-colors">
+                <LucideBrain size={18} />
+                <span className="font-medium">AEE</span>
+              </Link>
+            </>
+          )}
+          
+          {permissions.canAccessConfiguracoes && (
+            <>
+              <div className="mt-4 mb-1 text-xs font-semibold text-slate-500 uppercase px-3">
+                Sistema
+              </div>
+              <Link href="/configuracoes" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
+                <LucideSettings size={18} />
+                <span className="font-medium">Configurações</span>
+              </Link>
+            </>
+          )}
         </nav>
       </div>
       

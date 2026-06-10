@@ -32,7 +32,8 @@ export function PessoaForm({ disciplinas = [], turmas = [], defaultTipo = 'inter
       uf: ''
     },
     contatos: [
-      { tipo: 'celular', valor: '', principal: true }
+      { tipo: 'celular', valor: '', principal: true },
+      { tipo: 'email', valor: '', principal: false }
     ],
     habilitacoes: [] as string[],
     dadosAluno: {

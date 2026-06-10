@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { db } from '@/db'
 import { pessoa } from '@/db/schema'
 import { eq } from 'drizzle-orm'
+import { getUserPermissions } from '@/lib/auth/rbac'
 
 export default async function DashboardLayout({
   children,
@@ -16,8 +17,18 @@ export default async function DashboardLayout({
   
   if (user) {
     const [p] = await db.select({ situacao: pessoa.situacao }).from(pessoa).where(eq(pessoa.id, user.id));
-    if (p && p.situacao === 'inativo') {
-      redirect('/em-analise')
+    if (p) {
+      if (p.situacao === 'inativo') {
+        redirect('/em-analise')
+      } else if (p.situacao !== 'ativo') {
+        redirect('/acesso-bloqueado')
+      }
+    }
+
+    const permissions = await getUserPermissions(user.id, user.email);
+    if (!permissions.isFuncionario) {
+      // Futuramente aqui pode redirecionar para /portal-aluno, etc.
+      redirect('/acesso-bloqueado')
     }
   }
 

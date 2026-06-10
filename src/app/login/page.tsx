@@ -51,6 +51,7 @@ export default async function LoginPage(props: { searchParams: Promise<{ [key: s
               name="password"
               type="password"
               required
+              autoComplete="current-password"
               placeholder="••••••••"
               className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
             />
