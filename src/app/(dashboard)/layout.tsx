@@ -1,11 +1,26 @@
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { db } from '@/db'
+import { pessoa } from '@/db/schema'
+import { eq } from 'drizzle-orm'
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (user) {
+    const [p] = await db.select({ situacao: pessoa.situacao }).from(pessoa).where(eq(pessoa.id, user.id));
+    if (p && p.situacao === 'inativo') {
+      redirect('/em-analise')
+    }
+  }
+
   return (
     <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-hidden transition-colors duration-200">
       {/* Sidebar (Desktop) */}

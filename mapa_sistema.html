@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa do Sistema - Secretaria CSM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .module-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased selection:bg-blue-200">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 p-2.5 rounded-xl">
+                    <i data-lucide="graduation-cap" class="text-white h-6 w-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-slate-900">Gestão Escolar CSM</h1>
+                    <p class="text-xs text-slate-500 font-medium uppercase tracking-wider">Mapa de Recursos</p>
+                </div>
+            </div>
+            <div class="hidden sm:flex items-center gap-4 text-sm font-medium text-slate-600">
+                <a href="#cadastros" class="hover:text-blue-600 transition-colors">Cadastros</a>
+                <a href="#pedagogico" class="hover:text-blue-600 transition-colors">Pedagógico</a>
+                <a href="#secretaria" class="hover:text-blue-600 transition-colors">Secretaria</a>
+                <a href="#aee" class="hover:text-blue-600 transition-colors">AEE</a>
+                <a href="#responsavel" class="hover:text-blue-600 transition-colors">Portal</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="relative bg-blue-600 overflow-hidden">
+        <div class="absolute inset-0 opacity-10">
+            <svg class="h-full w-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <polygon fill="currentColor" points="0,100 100,0 100,100"/>
+            </svg>
+        </div>
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center lg:py-24">
+            <h2 class="text-3xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
+                O que você pode fazer no sistema?
+            </h2>
+            <p class="mt-6 max-w-3xl mx-auto text-lg text-blue-100 sm:text-xl">
+                Um guia rápido e interativo para entender todos os recursos, módulos e painéis disponíveis na nova plataforma unificada da Secretaria CSM.
+            </p>
+        </div>
+    </section>
+
+    <!-- Modules Grid -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 -mt-12 relative z-10">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+            <!-- Cadastros -->
+            <div id="cadastros" class="module-card bg-white rounded-2xl p-6 border border-slate-200 transition-all duration-300">
+                <div class="h-12 w-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center mb-6">
+                    <i data-lucide="users" class="h-6 w-6"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-3">Cadastros Base</h3>
+                <p class="text-slate-600 text-sm mb-6 line-clamp-3">
+                    Gerencie o coração da escola. Aqui você adiciona e edita os dados vitais de todos que interagem com a instituição.
+                </p>
+                <ul class="space-y-3">
+                    <li class="flex items-start gap-3 text-sm text-slate-700">
+                        <i data-lucide="check-circle-2" class="h-5 w-5 text-indigo-500 shrink-0"></i>
+                        <span><strong>Pessoas:</strong> Alunos, Funcionários e Responsáveis em um único lugar.</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-sm text-slate-700">
+                        <i data-lucide="check-circle-2" class="h-5 w-5 text-indigo-500 shrink-0"></i>
+                        <span><strong>Dados Complementares:</strong> RA, informações contratuais, carga horária e salário.</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-sm text-slate-700">
+                        <i data-lucide="check-circle-2" class="h-5 w-5 text-indigo-500 shrink-0"></i>
+                        <span><strong>Habilitações:</strong> Vinculação de disciplinas aos professores.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Secretaria -->
+            <div id="secretaria" class="module-card bg-white rounded-2xl p-6 border border-slate-200 transition-all duration-300">
+                <div class="h-12 w-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center mb-6">
+                    <i data-lucide="file-text" class="h-6 w-6"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-3">Secretaria Escolar</h3>
+                <p class="text-slate-600 text-sm mb-6 line-clamp-3">
+                    Administração da vida acadêmica e burocrática dos alunos de forma ágil e estruturada.
+                </p>
+                <ul class="space-y-3">
+                    <li class="flex items-start gap-3 text-sm text-slate-700">
+                        <i data-lucide="check-circle-2" class="h-5 w-5 text-emerald-500 shrink-0"></i>
+                        <span><strong>Matrículas:</strong> Vincule alunos às turmas e anos letivos.</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-sm text-slate-700">
+                        <i data-lucide="check-circle-2" class="h-5 w-5 text-emerald-500 shrink-0"></i>
+                        <span><strong>Ocorrências:</strong> Registro disciplinar e pedagógico centralizado.</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-sm text-slate-700">
+                        <i data-lucide="check-circle-2" class="h-5 w-5 text-emerald-500 shrink-0"></i>
+                        <span><strong>Mural de Avisos:</strong> Comunicados em massa com acompanhamento de "Ciente".</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-sm text-slate-700">
+                        <i data-lucide="check-circle-2" class="h-5 w-5 text-emerald-500 shrink-0"></i>
+                        <span><strong>Histórico Escolar:</strong> Consolidação de notas e vida do estudante.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Pedagógico -->
+            <div id="pedagogico" class="module-card bg-white rounded-2xl p-6 border border-slate-200 transition-all duration-300">
+                <div class="h-12 w-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center mb-6">
+                    <i data-lucide="book-open" class="h-6 w-6"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-3">Pedagógico & Diário</h3>
+                <p class="text-slate-600 text-sm mb-6 line-clamp-3">
+                    O ambiente do professor e da coordenação. Grade curricular, turmas e acompanhamento de aulas.
+                </p>
+                <ul class="space-y-3">
+                    <li class="flex items-start gap-3 text-sm text-slate-700">
+                        <i data-lucide="check-circle-2" class="h-5 w-5 text-amber-500 shrink-0"></i>
+                        <span><strong>Estrutura:</strong> Nível de Ensino, Séries, Disciplinas e Salas Físicas.</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-sm text-slate-700">
+                        <i data-lucide="check-circle-2" class="h-5 w-5 text-amber-500 shrink-0"></i>
+                        <span><strong>Turmas:</strong> Alocação de professores e Grade Curricular.</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-sm text-slate-700">
+                        <i data-lucide="check-circle-2" class="h-5 w-5 text-amber-500 shrink-0"></i>
+                        <span><strong>Diário de Classe:</strong> Lançamento de notas, recuperações e faltas.</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-sm text-slate-700">
+                        <i data-lucide="check-circle-2" class="h-5 w-5 text-amber-500 shrink-0"></i>
+                        <span><strong>Modelos Específicos:</strong> Notas 0-10 para o Técnico e avaliações descritivas para o Infantil.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- AEE -->
+            <div id="aee" class="module-card bg-white rounded-2xl p-6 border border-slate-200 transition-all duration-300">
+                <div class="h-12 w-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center mb-6">
+                    <i data-lucide="heart-handshake" class="h-6 w-6"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-3">Atendimento Especializado (AEE)</h3>
+                <p class="text-slate-600 text-sm mb-6 line-clamp-3">
+                    Módulo totalmente dedicado à inclusão e suporte de alunos com necessidades educacionais especiais.
+                </p>
+                <ul class="space-y-3">
+                    <li class="flex items-start gap-3 text-sm text-slate-700">
+                        <i data-lucide="check-circle-2" class="h-5 w-5 text-purple-500 shrink-0"></i>
+                        <span><strong>Prontuário Completo:</strong> Dados médicos, laudos e anexos clínicos.</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-sm text-slate-700">
+                        <i data-lucide="check-circle-2" class="h-5 w-5 text-purple-500 shrink-0"></i>
+                        <span><strong>PEI (Plano Educacional):</strong> Criação de Metas Pedagógicas e adaptações.</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-sm text-slate-700">
+                        <i data-lucide="check-circle-2" class="h-5 w-5 text-purple-500 shrink-0"></i>
+                        <span><strong>Timeline de Atendimentos:</strong> Histórico de sessões multifuncionais.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Portal do Responsável -->
+            <div id="responsavel" class="module-card bg-white rounded-2xl p-6 border border-slate-200 transition-all duration-300">
+                <div class="h-12 w-12 bg-sky-50 text-sky-600 rounded-xl flex items-center justify-center mb-6">
+                    <i data-lucide="smartphone" class="h-6 w-6"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-3">Portal do Responsável</h3>
+                <p class="text-slate-600 text-sm mb-6 line-clamp-3">
+                    Acesso externo voltado aos pais e alunos, focado na experiência mobile-first.
+                </p>
+                <ul class="space-y-3">
+                    <li class="flex items-start gap-3 text-sm text-slate-700">
+                        <i data-lucide="check-circle-2" class="h-5 w-5 text-sky-500 shrink-0"></i>
+                        <span><strong>Acesso Rápido:</strong> Cronogramas de aula e eventos diários.</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-sm text-slate-700">
+                        <i data-lucide="check-circle-2" class="h-5 w-5 text-sky-500 shrink-0"></i>
+                        <span><strong>Boletim Digital:</strong> Acompanhamento de notas e presenças em tempo real.</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-sm text-slate-700">
+                        <i data-lucide="check-circle-2" class="h-5 w-5 text-sky-500 shrink-0"></i>
+                        <span><strong>Comunicação Direta:</strong> Ciência em avisos da secretaria com um clique.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Sistema & Segurança -->
+            <div class="module-card bg-slate-800 rounded-2xl p-6 border border-slate-700 transition-all duration-300">
+                <div class="h-12 w-12 bg-slate-700 text-white rounded-xl flex items-center justify-center mb-6">
+                    <i data-lucide="shield-check" class="h-6 w-6"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-3">Infraestrutura & Segurança</h3>
+                <p class="text-slate-400 text-sm mb-6 line-clamp-3">
+                    A plataforma foi construída sob rígidos padrões de integridade de dados e auditoria contínua.
+                </p>
+                <ul class="space-y-3">
+                    <li class="flex items-start gap-3 text-sm text-slate-300">
+                        <i data-lucide="check-circle-2" class="h-5 w-5 text-slate-500 shrink-0"></i>
+                        <span><strong>Nenhuma deleção real:</strong> Remoções manuais geram rastro de auditoria.</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-sm text-slate-300">
+                        <i data-lucide="check-circle-2" class="h-5 w-5 text-slate-500 shrink-0"></i>
+                        <span><strong>Row Level Security:</strong> Proteção de dados no nível do banco.</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-sm text-slate-300">
+                        <i data-lucide="check-circle-2" class="h-5 w-5 text-slate-500 shrink-0"></i>
+                        <span><strong>Busca Rápida:</strong> Paginação e filtros eficientes em todas as tabelas.</span>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-12 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-slate-500">
+            <p>Gerado automaticamente para a Instituição de Ensino CSM.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Inicializa os ícones do Lucide
+        lucide.createIcons();
+    </script>
+</body>
+</html>
