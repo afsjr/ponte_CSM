@@ -5,7 +5,7 @@ import postgres from 'postgres';
 const TEST_USERS = [
   {
     id: 'f0000000-0000-0000-0000-000000000001',
-    email: 'secretaria@csm.edu.br',
+    email: 'secretaria@csmeducacao.com',
     nome: 'Teste Secretaria',
     role: 'funcionario',
     cargo: 'Secretária',
@@ -13,7 +13,7 @@ const TEST_USERS = [
   },
   {
     id: 'f0000000-0000-0000-0000-000000000002',
-    email: 'coordenacao@csm.edu.br',
+    email: 'coordenacao@csmeducacao.com',
     nome: 'Teste Coordenação',
     role: 'funcionario',
     cargo: 'Coordenador',
@@ -21,7 +21,7 @@ const TEST_USERS = [
   },
   {
     id: 'f0000000-0000-0000-0000-000000000003',
-    email: 'professor@csm.edu.br',
+    email: 'professor@csmeducacao.com',
     nome: 'Teste Professor',
     role: 'funcionario',
     cargo: 'Professor',
@@ -29,7 +29,7 @@ const TEST_USERS = [
   },
   {
     id: 'f0000000-0000-0000-0000-000000000004',
-    email: 'aluno@csm.edu.br',
+    email: 'aluno@csmeducacao.com',
     nome: 'Teste Aluno',
     role: 'aluno',
     cargo: null,
@@ -37,7 +37,7 @@ const TEST_USERS = [
   },
   {
     id: 'f0000000-0000-0000-0000-000000000005',
-    email: 'responsavel@csm.edu.br',
+    email: 'responsavel@csmeducacao.com',
     nome: 'Teste Responsável',
     role: 'responsavel',
     cargo: null,
@@ -48,13 +48,17 @@ const TEST_USERS = [
 const DEFAULT_PASSWORD = 'Teste#12345';
 
 async function run() {
-  const sql = postgres(process.env.DATABASE_URL!, { prepare: false });
+  let dbUrl = process.env.DATABASE_URL!;
+  if (dbUrl.includes(':6543')) {
+    dbUrl = dbUrl.replace(':6543', ':5432');
+  }
+  const sql = postgres(dbUrl, { prepare: false });
 
   try {
     console.log("Iniciando limpeza e criação de usuários de teste...");
 
-    // Criptografa a senha usando bcrypt do PostgreSQL
-    const [pwdHashRow] = await sql`SELECT crypt(${DEFAULT_PASSWORD}, gen_salt('bf')) as hash`;
+    // Criptografa a senha usando bcrypt do PostgreSQL com cost 10 (requerido pelo GoTrue)
+    const [pwdHashRow] = await sql`SELECT crypt(${DEFAULT_PASSWORD}, gen_salt('bf', 10)) as hash`;
     const passwordHash = pwdHashRow.hash;
 
     for (const u of TEST_USERS) {
