@@ -84,8 +84,8 @@ export default async function LoginPage(props: { searchParams: Promise<{ [key: s
           <div className="mt-2 bg-blue-50/50 p-4 rounded-xl border border-blue-100 flex items-start gap-3">
             <div className="text-blue-500 shrink-0 mt-0.5">ℹ️</div>
             <div className="text-sm text-blue-800">
-              <span className="font-semibold block mb-1">Primeiro acesso?</span>
-              Conheça todos os recursos do CSM Gestão Escolar. <a href="/mapa_sistema.html" target="_blank" className="text-blue-600 underline font-medium hover:text-blue-700">Ver o mapa do sistema &rarr;</a>
+              <span className="font-semibold block mb-1">Dúvidas sobre o sistema?</span>
+              Conheça os perfis de acesso e recursos da plataforma. <Link href="/apresentacao" className="text-blue-600 underline font-medium hover:text-blue-700">Acessar Guia de Treinamento &rarr;</Link>
             </div>
           </div>
         </form>

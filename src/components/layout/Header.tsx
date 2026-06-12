@@ -1,6 +1,7 @@
 import { logout } from '@/app/login/actions'
-import { LucideLogOut, LucideUserCircle } from 'lucide-react'
+import { LucideLogOut, LucideUserCircle, LucideHelpCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import Link from 'next/link'
 
 export async function Header() {
   const supabase = await createClient()
@@ -15,6 +16,16 @@ export async function Header() {
       </div>
 
       <div className="flex items-center gap-6">
+        <Link 
+          href="/apresentacao"
+          className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-[var(--color-csm-red)] dark:hover:text-red-400 transition-colors dark:text-slate-450"
+        >
+          <LucideHelpCircle size={14} />
+          <span>Guia do Sistema</span>
+        </Link>
+        
+        <div className="h-6 w-px bg-gray-200 dark:bg-slate-800"></div>
+
         <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
           <LucideUserCircle size={20} className="text-slate-400 dark:text-slate-500" />
           <span className="font-medium hidden sm:inline-block text-slate-700 dark:text-slate-200">{user?.email}</span>

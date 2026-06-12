@@ -5,7 +5,8 @@ import {
   LucideGraduationCap, 
   LucideFileText, 
   LucideSettings,
-  LucideBrain
+  LucideBrain,
+  LucideHelpCircle
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getUserPermissions } from '@/lib/auth/rbac'
@@ -84,6 +85,14 @@ export async function Sidebar() {
               </Link>
             </>
           )}
+
+          <div className="mt-4 mb-1 text-xs font-semibold text-slate-500 uppercase px-3">
+            Treinamento
+          </div>
+          <Link href="/apresentacao" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-[var(--color-csm-yellow)] transition-colors">
+            <LucideHelpCircle size={18} />
+            <span className="font-medium">Guias de Perfis</span>
+          </Link>
         </nav>
       </div>
       
