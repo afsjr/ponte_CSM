@@ -53,7 +53,14 @@ async function main() {
   'aee_documento',
   'aee_prontuario_evolucao',
   'notas_boletim',
-  'calendario_pedagogico'
+  'calendario_pedagogico',
+  'plano_contas',
+  'centro_custo',
+  'titulo_financeiro',
+  'rh_dossie_colaborador',
+  'rh_documento_colaborador',
+  'rh_ferias',
+  'rh_ocorrencia_funcional'
 ];
 
   for (const table of tables) {

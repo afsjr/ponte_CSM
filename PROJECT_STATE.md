@@ -152,9 +152,17 @@ Para garantir que múltiplos agentes de IA trabalhem em paralelo neste repositó
 - **Testes**: Criada a suíte `src/actions/aee.test.ts` com 12 testes unitários. Toda a suíte de testes Vitest rodou com 100% de sucesso (58 testes verdes no total do projeto).
 - **Compilação**: Validada compilação com `tsc --noEmit` sem erros.
 
+**[BLOCK 027 - 2026-07-20] - Módulos Financeiro e RH (Pipeline Reversa Greenfield/Forward)**
+- **Pipeline Reversa**: Concluído o fluxo completo do Reversa (`/reversa-new` -> `ideator` -> `researcher` -> `drafter` -> `spec-sdd` -> `/reversa-forward` -> `requirements` -> `plan` -> `to-do` -> `coding` -> `sync`).
+- **Banco de Dados & RLS**: Criadas as tabelas `plano_contas`, `centro_custo`, `titulo_financeiro`, `rh_dossie_colaborador`, `rh_documento_colaborador`, `rh_ferias` e `rh_ocorrencia_funcional` e 4 enums no `schema.ts`. RLS ativado no `scripts/setup_rls.ts`.
+- **Server Actions**: Implementados `src/actions/financeiro.ts` (Plano de contas, Centros de custo, Títulos, Baixas, DRE por segmento e Alertas de Calendário) e `src/actions/rh.ts` (Dossiê de colaborador, Documentos, Férias, Ocorrências funcionais imutáveis e Conferência de folha).
+- **Frontend**: Desenvolvidos o Módulo Financeiro (`/financeiro/page.tsx` + `FinanceiroTabs.tsx`) e o Módulo de RH (`/rh/page.tsx` + `RhTabs.tsx`). Atualizado o Dashboard principal (`/page.tsx`) com cards de acesso rápido.
+- **Testes & Tipagem**: Criadas suítes Vitest `src/actions/financeiro.test.ts` (6 testes) e `src/actions/rh.test.ts` (4 testes). Toda a suíte de testes Vitest rodou com 100% de sucesso (**72/72 testes verdes** no total do projeto). Compilação TypeScript 100% sem erros (`tsc --noEmit`).
+
 ---
 
 ## 🎯 NEXT ACTIONS FOR THE AI
 **Context for the next LLM picking this up:**
-1. A evolução do módulo de AEE (todos os níveis de ensino, PEI, metas, atendimentos multifuncionais, e laudos clínicos) foi totalmente concluída e testada.
-2. **IMMEDIATE TASK:** Aguardar novas especificações ou próximos módulos pedagógicos/secretaria solicitados pelo usuário, ou orientações sobre a importação de dados legados do Sponte.
+1. A implementação e convergência dos **Módulos Financeiro e de RH** via pipeline Reversa foram totalmente concluídas, testadas e sincronizadas em `_reversa_sdd/addenda/001-modulos-financeiro-rh.md`.
+2. **IMMEDIATE TASK:** Aguardar novas instruções do usuário para evolução de novos módulos ou integração com dados legados do Sponte.
+

@@ -1,0 +1,16 @@
+{
+  "schema-version": 1,
+  "feature-dir": "_reversa_forward/001-modulos-financeiro-rh",
+  "feature-id": "001",
+  "short-name": "modulos-financeiro-rh",
+  "started-at": "2026-07-20T22:54:14-03:00",
+  "current-stage": "done",
+  "stages-completed": [
+    "requirements",
+    "plan",
+    "to-do",
+    "coding",
+    "sync"
+  ],
+  "paused-features": []
+}

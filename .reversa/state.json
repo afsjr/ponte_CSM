@@ -7,6 +7,18 @@
   "answer_mode": "file",
   "doc_level": "completo",
   "output_folder": "_reversa_sdd",
+  "newproject_progress": {
+    "stage": "done",
+    "started_at": "2026-07-20T22:38:21-03:00",
+    "last_checkpoint_at": "2026-07-20T22:52:51-03:00",
+    "completed_stages": [
+      "ideator",
+      "researcher",
+      "drafter",
+      "spec-sdd"
+    ],
+    "brief": "Inicie o processo de criação dos módulos financeiros e de RH."
+  },
   "forward_folder": "_reversa_forward",
   "phase": "finalizado",
   "completed": [

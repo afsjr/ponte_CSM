@@ -26,6 +26,27 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 
 describe('Pessoa Server Actions', () => {
+// Mock do RBAC
+vi.mock('@/lib/auth/rbac', () => ({
+  getUserPermissions: vi.fn().mockImplementation(async (userId: string, email?: string) => {
+    const isComum = email === 'comum@csm.edu.br';
+    return {
+      isFuncionario: true,
+      isAdmin: !isComum,
+      canAccessCadastros: true,
+      canAccessSecretaria: true,
+      canAccessPedagogico: true,
+      canAccessAee: true,
+      canAccessConfiguracoes: !isComum,
+    };
+  })
+}))
+
+// Mock next/cache
+vi.mock('next/cache', () => ({
+  revalidatePath: vi.fn()
+}))
+
   beforeEach(() => {
     vi.clearAllMocks()
     mockGetUser.mockResolvedValue({

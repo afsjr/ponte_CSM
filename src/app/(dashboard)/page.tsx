@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { db } from '@/db'
 import { pessoaClassificacao, turma, matricula, pessoa } from '@/db/schema'
 import { eq, sql, or } from 'drizzle-orm'
-import { AlertCircle, UserPlus } from 'lucide-react'
+import { AlertCircle, UserPlus, DollarSign } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -126,6 +126,22 @@ export default async function DashboardHome() {
           <p className="text-sm text-gray-500 line-clamp-2">Contratos, histórico escolar, atestados e ocorrências.</p>
         </Link>
         
+        <Link href="/financeiro" className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md hover:border-emerald-200 transition-all group">
+          <div className="bg-emerald-50 text-emerald-600 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <DollarSign size={24} />
+          </div>
+          <h3 className="font-semibold text-gray-900 mb-1">Financeiro</h3>
+          <p className="text-sm text-gray-500 line-clamp-2">Contas a pagar/receber, DRE, margens e calendário tributário.</p>
+        </Link>
+
+        <Link href="/rh" className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md hover:border-indigo-200 transition-all group">
+          <div className="bg-indigo-50 text-indigo-600 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <LucideUsers size={24} />
+          </div>
+          <h3 className="font-semibold text-gray-900 mb-1">Recursos Humanos</h3>
+          <p className="text-sm text-gray-500 line-clamp-2">Dossiê do colaborador, férias, ocorrências funcionais e folha.</p>
+        </Link>
+
         <Link href="/configuracoes" className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md hover:border-slate-200 transition-all group">
           <div className="bg-slate-100 text-slate-600 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
             <LucideSettings size={24} />

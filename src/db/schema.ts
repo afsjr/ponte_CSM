@@ -25,6 +25,12 @@ export const formaAvaliacaoEnum = pgEnum('forma_avaliacao', ['numerica', 'concei
 export const diaSemanaEnum = pgEnum('dia_semana', ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo']);
 export const tipoEventoCalendarioEnum = pgEnum('tipo_evento_calendario', ['feriado', 'reuniao_pais', 'conselho_classe', 'prova', 'evento_escolar', 'outro']);
 
+// --- ENUMS FINANCEIRO & RH ---
+export const tipoPlanoContaEnum = pgEnum('tipo_plano_conta', ['receita', 'despesa']);
+export const statusTituloEnum = pgEnum('status_titulo', ['pendente', 'pago', 'recebido', 'atrasado', 'cancelado']);
+export const tipoOcorrenciaRhEnum = pgEnum('tipo_ocorrencia_rh', ['advertencia_verbal', 'advertencia_escrita', 'suspensao', 'promocao', 'gratificacao', 'elogio']);
+export const statusFeriasEnum = pgEnum('status_ferias', ['programada', 'em_gozo', 'concluida', 'cancelada']);
+
 // --- CORE TABLES ---
 export const pessoa = pgTable('pessoa', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -553,3 +559,84 @@ export const calendarioPedagogico = pgTable('calendario_pedagogico', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+// --- FINANCEIRO & RH TABLES ---
+export const planoContas = pgTable('plano_contas', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  codigo: varchar('codigo', { length: 20 }).notNull(),
+  descricao: varchar('descricao', { length: 255 }).notNull(),
+  tipo: tipoPlanoContaEnum('tipo').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const centroCusto = pgTable('centro_custo', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  nome: varchar('nome', { length: 100 }).notNull(),
+  descricao: text('descricao'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const tituloFinanceiro = pgTable('titulo_financeiro', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  tipo: tipoPlanoContaEnum('tipo').notNull(),
+  descricao: varchar('descricao', { length: 255 }).notNull(),
+  pessoaId: uuid('pessoa_id').references(() => pessoa.id, { onDelete: 'set null' }),
+  planoContaId: uuid('plano_conta_id').references(() => planoContas.id, { onDelete: 'restrict' }),
+  centroCustoId: uuid('centro_custo_id').references(() => centroCusto.id, { onDelete: 'restrict' }),
+  valorOriginal: integer('valor_original').notNull(), // em centavos
+  valorPago: integer('valor_pago').default(0).notNull(), // em centavos
+  dataVencimento: timestamp('data_vencimento', { mode: 'date' }).notNull(),
+  dataPagamento: timestamp('data_pagamento', { mode: 'date' }),
+  status: statusTituloEnum('status').default('pendente').notNull(),
+  formaPagamento: varchar('forma_pagamento', { length: 50 }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const rhDossieColaborador = pgTable('rh_dossie_colaborador', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  pessoaId: uuid('pessoa_id').references(() => pessoa.id, { onDelete: 'cascade' }).unique().notNull(),
+  cargo: varchar('cargo', { length: 100 }).notNull(),
+  salarioBase: integer('salario_base').notNull(), // em centavos
+  jornadaSemanalHoras: integer('jornada_semanal_horas').default(40).notNull(),
+  dadosBancarios: jsonb('dados_bancarios'),
+  dataAdmissao: timestamp('data_admissao', { mode: 'date' }).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const rhDocumentoColaborador = pgTable('rh_documento_colaborador', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  pessoaId: uuid('pessoa_id').references(() => pessoa.id, { onDelete: 'cascade' }).notNull(),
+  tipoDocumento: varchar('tipo_documento', { length: 50 }).notNull(),
+  urlStorage: text('url_storage').notNull(),
+  dataValidade: timestamp('data_validade', { mode: 'date' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const rhFerias = pgTable('rh_ferias', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  pessoaId: uuid('pessoa_id').references(() => pessoa.id, { onDelete: 'cascade' }).notNull(),
+  periodoAquisitivoInicio: timestamp('periodo_aquisitivo_inicio', { mode: 'date' }).notNull(),
+  periodoAquisitivoFim: timestamp('periodo_aquisitivo_fim', { mode: 'date' }).notNull(),
+  dataInicioGozo: timestamp('data_inicio_gozo', { mode: 'date' }).notNull(),
+  dataFimGozo: timestamp('data_fim_gozo', { mode: 'date' }).notNull(),
+  status: statusFeriasEnum('status').default('programada').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const rhOcorrenciaFuncional = pgTable('rh_ocorrencia_funcional', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  pessoaId: uuid('pessoa_id').references(() => pessoa.id, { onDelete: 'cascade' }).notNull(),
+  tipo: tipoOcorrenciaRhEnum('tipo').notNull(),
+  descricao: text('descricao').notNull(),
+  valorImpacto: integer('valor_impacto'), // em centavos se houver gratificação ou alteração salarial
+  registradoPorId: uuid('registrado_por_id').references(() => pessoa.id, { onDelete: 'restrict' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
